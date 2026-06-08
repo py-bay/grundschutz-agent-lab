@@ -138,16 +138,20 @@ Aktive Flags in `~/.claude/settings.json` (zusaetzlich zu Abschnitt 1):
 Damit in o2 zusaetzlich sichtbar:
 - **Tool-Output-Inhalt** (Evidenz, z.B. `sshd -T`) ueber Trace-Spans.
 - **Volle API-Bodies:** System-Prompt, ganze Message-History, Tool-Schemas
-  (Request) und Content-Bloecke inkl. `usage.output_tokens_details.thinking_tokens`
-  (Response). Inline = 60 KB cap; untrunkiert via `=file:<dir>` (dann aber
-  nur Datei-Ref in o2, nicht der Inhalt).
+  (Request) und Content-Bloecke inkl. **Modell-Output-Text** (Response,
+  empirisch bestaetigt). Inline = 60 KB cap (grosse Requests werden
+  `body_truncated=true`); untrunkiert via `=file:<dir>` (dann aber nur
+  Datei-Ref in o2, nicht der Inhalt).
 
-**Harte Grenze - Thinking-Inhalt:** der Reasoning-*Text* ist **nirgends**
-verfuegbar (empirisch geprueft: Transcript-Thinking-Bloecke 0/58 mit
-Klartext, nur `signature`; in Raw-API-Bodies redacted). Sichtbar bleiben:
-`effort` (z.B. high), die Thinking-*Token-Zahl* (nur aus Raw-Body-`usage`),
-und die Gesamt-`output_tokens` (Thinking eingerechnet). Fuer die Thesis als
-Limitation auszuweisen: interne Reasoning-Schritte sind nicht beobachtbar.
+**Harte Grenze - Thinking:** der Reasoning-*Text* ist **nirgends** verfuegbar
+(empirisch: Transcript-Thinking-Bloecke 0/58 mit Klartext, nur `signature`;
+im Raw-Response-Body steht woertlich `"thinking":"<REDACTED>"`). Auch die
+Thinking-*Token-Zahl* ist **nicht separat** abgreifbar: das `usage`-Objekt
+enthielt nur `input_tokens / cache_creation_input_tokens /
+cache_read_input_tokens / output_tokens` (kein `thinking_tokens`-Feld) -
+Thinking ist in `output_tokens` eingerechnet. Sichtbar bleibt nur `effort`
+(z.B. high) + Gesamt-`output_tokens`. Fuer die Thesis als Limitation
+ausweisen: interne Reasoning-Schritte sind nicht beobachtbar.
 
 **Caveats Max-Modus:** Bodies enthalten die ganze Konversation pro Call
 (Duplikation, Volumen); Tool-Inputs/Bash-Befehle/-Ausgaben koennen Secrets
