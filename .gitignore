@@ -5,4 +5,7 @@ runs/*/ssh/
 runs/*/pod.yaml
 runs/*/portforward.pid
 runs/*/portforward.log
+runs/*/agent_stderr.log
 !runs/.gitkeep
+# Bewusst NICHT ignoriert (= versionierter Forschungs-Record):
+#   runs/*/manifest.json, runs/*/agent_output.json, runs/*/transcript.jsonl

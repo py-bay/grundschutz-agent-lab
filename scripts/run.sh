@@ -17,9 +17,11 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 [[ $# -ge 2 ]] || die "Aufruf: run.sh <scenario-id> <compliant|non_compliant> [--port N]"
 SCENARIO="$1"; VARIANT="$2"; shift 2
 PORT=2222
+RUN_AGENT=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --port) PORT="$2"; shift 2;;
+    --agent) RUN_AGENT=true; shift;;       # claude direkt fahren + Output pro Lauf sichern
     *) die "unbekanntes Argument: $1";;
   esac
 done
@@ -122,6 +124,32 @@ JSON
 $KUBECTL -n "$NAMESPACE" port-forward "pod/$POD_NAME" "$PORT:22" >"$RUN_DIR/portforward.log" 2>&1 &
 echo $! > "$RUN_DIR/portforward.pid"
 sleep 2
+
+SSH_ACCESS="ssh -i runs/$RUN_ID/ssh/id_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p $PORT audit@127.0.0.1"
+AGENT_PROMPT="$(cat "$SCEN_DIR/check-prompt.md")
+
+SSH-Zugang (read-only): $SSH_ACCESS"
+
+# --- Schicht 2: Agent fahren + vollstaendigen Output pro Lauf sichern ---
+if [[ "$RUN_AGENT" == true ]]; then
+  if command -v claude >/dev/null 2>&1; then
+    info "starte Agent (claude -p --output-format json) ..."
+    OTEL_RESOURCE_ATTRIBUTES="$OTEL_ATTRS" \
+      claude -p "$AGENT_PROMPT" --output-format json \
+        > "$RUN_DIR/agent_output.json" 2> "$RUN_DIR/agent_stderr.log" || true
+    # vollstaendiges Session-Transcript (Prompt+Antwort+Tool-I/O) mitnehmen
+    SID="$(sed -n 's/.*"session_id":[[:space:]]*"\([^"]*\)".*/\1/p' "$RUN_DIR/agent_output.json" | head -n1)"
+    if [[ -n "$SID" ]]; then
+      TRANSCRIPT="$(find "$HOME/.claude/projects" -name "$SID.jsonl" 2>/dev/null | head -n1)"
+      [[ -n "$TRANSCRIPT" ]] && cp "$TRANSCRIPT" "$RUN_DIR/transcript.jsonl"
+    fi
+    info "Agent fertig -> runs/$RUN_ID/agent_output.json (+ transcript.jsonl falls gefunden)"
+    info "Urteil festhalten + abraeumen: scripts/teardown.sh $RUN_ID --verdict <konform|nicht_konform>"
+    echo "$RUN_ID"
+    exit 0
+  fi
+  info "--agent gesetzt, aber 'claude' nicht im PATH -> manueller Modus."
+fi
 
 cat >&2 <<EOF
 

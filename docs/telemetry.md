@@ -18,10 +18,18 @@ Base64-Auth-String steht nur lokal in der User-`settings.json`.
     "OTEL_LOGS_EXPORTER": "otlp",
     "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
     "OTEL_EXPORTER_OTLP_ENDPOINT": "https://o2.k3s.pybay.de/api/default",
-    "OTEL_EXPORTER_OTLP_HEADERS": "Authorization=Basic <BASE64>"
+    "OTEL_EXPORTER_OTLP_HEADERS": "Authorization=Basic <BASE64>",
+    "OTEL_LOG_USER_PROMPTS": "1",
+    "OTEL_LOG_TOOL_DETAILS": "1"
   }
 }
 ```
+
+Ohne die letzten beiden Flags schwaerzt Claude Code den Prompt-Text und
+laesst Tool-Calls weg (Default = Privacy). `OTEL_LOG_USER_PROMPTS=1` zeigt
+den Prompt, `OTEL_LOG_TOOL_DETAILS=1` Tool-Name/Befehl/Argumente. Den
+Auth-Header haelt man besser aus der Datei raus und setzt ihn als
+Umgebungsvariable (`OTEL_EXPORTER_OTLP_HEADERS`).
 
 - **`<BASE64>`** erzeugen aus den OpenObserve-Admin-Creds (gleiche wie aus
   dem homelab-Vault `openobserve_admin_email` / `openobserve_admin_password`):
@@ -70,3 +78,48 @@ Metriken; so bleiben Token/Kosten pro Lauf abfragbar.
 `runs/<run_id>/manifest.json` enthaelt `otel_resource_attributes` mit
 demselben `run.id`. Damit ist der lokale Run-Nachweis (GT-Hash, Urteil,
 passed) eindeutig mit der Cluster-Telemetrie verknuepft.
+
+## 5. Was OTel erfasst - und was nicht (zwei Schichten)
+
+Empirisch an einem Lauf geprueft (`run_id=telemetry-test`): die
+claude-code-Events landen im o2-Log-Stream `default` (service_name
+`claude-code`) mit u.a. den Spalten `event_name, run_id, scenario, model,
+input_tokens, output_tokens, cache_*_tokens, cost_usd, duration_ms,
+prompt_id, request_id, session_id`.
+
+| Artefakt | Quelle | erfasst |
+|---|---|---|
+| Tokens, Kosten, Dauer, Tool-*Entscheidungen* | OTel -> o2 | ja, pro Event, getaggt mit run_id |
+| Prompt-Text | OTel -> o2 | nur mit `OTEL_LOG_USER_PROMPTS=1` |
+| Tool-Name/Befehl/Args | OTel -> o2 | nur mit `OTEL_LOG_TOOL_DETAILS=1` |
+| **Modell-Output / Pruefurteil (Text)** | OTel -> o2 | **nein** (nur Output-Token-Zahl) |
+| Tool-*Ausgabe* (z.B. `sshd -T`-Output = Evidenz) | OTel -> o2 | nur via Traces+`OTEL_LOG_TOOL_CONTENT=1` bzw. `OTEL_LOG_RAW_API_BODIES` (schwer/rauschig) |
+| **Voller Record: Prompt + Antwort + Tool-I/O** | `claude -p --output-format json` / Transcript `.jsonl` | **ja, vollstaendig** |
+
+**Designfolge:**
+- **o2/OTel** = quantitative Schicht (cross-run-Aggregation: pass^k, Kosten,
+  Tokens, Tool-Entscheidungen, Fehlerzaehler).
+- **Pro-Lauf-Artefakt im Repo** (`runs/<run_id>/agent_output.json` +
+  `transcript.jsonl`) = vollstaendige qualitative Schicht (Pruefurteil +
+  Begruendung + ausgefuehrte Befehle/Evidenz) fuer GT-Abgleich und
+  H3-Fehlerklassen-Codierung. `run.sh --agent` erzeugt beide automatisch.
+
+## 6. o2 direkt abfragen (Such-API)
+
+OpenObserve hat eine SQL-Such-API - so ziehe ich (und du) Laufdaten ohne UI:
+
+```bash
+AUTH='Authorization: Basic <BASE64>'
+START=$(( $(date -u -d '24 hours ago' +%s) * 1000000 ))
+END=$(( $(date -u +%s) * 1000000 ))
+curl -s -X POST "https://o2.k3s.pybay.de/api/default/_search?type=logs" \
+  -H "$AUTH" -H 'Content-Type: application/json' -d @- <<JSON
+{ "query": {
+    "sql": "SELECT event_name, model, input_tokens, output_tokens, cost_usd FROM \"default\" WHERE service_name='claude-code' AND run_id='<RUN_ID>' ORDER BY _timestamp",
+    "start_time": $START, "end_time": $END, "size": 200 } }
+JSON
+```
+
+Aggregation ueber Laeufe (Beispiel Kosten je Lauf):
+`SELECT run_id, sum(cost_usd) c, sum(output_tokens) o FROM "default"
+WHERE service_name='claude-code' GROUP BY run_id`.

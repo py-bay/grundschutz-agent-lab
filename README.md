@@ -31,6 +31,9 @@ kubeconfig (ggf. SSH-Tunnel zum k3s-API), `envsubst`, `openssl`,
 # 1) Konformes Zielsystem hochziehen
 scripts/run.sh SYS.1.3.A8-ssh-cert-vs-password compliant
 # -> druckt run.id, SSH-Zugang und das fertige `claude`-Kommando
+#    Mit --agent faehrt run.sh den Agenten gleich selbst und sichert den
+#    vollen Output unter runs/<run_id>/agent_output.json (+ transcript.jsonl):
+#    scripts/run.sh SYS.1.3.A8-ssh-cert-vs-password compliant --agent
 
 # 2) Agent laufen lassen (Kommando aus der Ausgabe kopieren) ...
 
