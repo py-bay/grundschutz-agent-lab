@@ -123,3 +123,32 @@ JSON
 Aggregation ueber Laeufe (Beispiel Kosten je Lauf):
 `SELECT run_id, sum(cost_usd) c, sum(output_tokens) o FROM "default"
 WHERE service_name='claude-code' GROUP BY run_id`.
+
+## 7. Maximal-Sichtbarkeit (aktiv) + Thinking-Grenze
+
+Aktive Flags in `~/.claude/settings.json` (zusaetzlich zu Abschnitt 1):
+
+```jsonc
+"OTEL_LOG_TOOL_CONTENT": "1",       // Tool-Ein/Ausgabe-INHALT (z.B. sshd -T-Output) in Traces, 60 KB cap
+"OTEL_TRACES_EXPORTER": "otlp",     // Spans (Prompt -> API-Calls -> Tools) nach o2
+"CLAUDE_CODE_ENHANCED_TELEMETRY_BETA": "1",
+"OTEL_LOG_RAW_API_BODIES": "1"      // volle Request/Response-JSON in o2 (api_request_body/api_response_body), 60 KB cap
+```
+
+Damit in o2 zusaetzlich sichtbar:
+- **Tool-Output-Inhalt** (Evidenz, z.B. `sshd -T`) ueber Trace-Spans.
+- **Volle API-Bodies:** System-Prompt, ganze Message-History, Tool-Schemas
+  (Request) und Content-Bloecke inkl. `usage.output_tokens_details.thinking_tokens`
+  (Response). Inline = 60 KB cap; untrunkiert via `=file:<dir>` (dann aber
+  nur Datei-Ref in o2, nicht der Inhalt).
+
+**Harte Grenze - Thinking-Inhalt:** der Reasoning-*Text* ist **nirgends**
+verfuegbar (empirisch geprueft: Transcript-Thinking-Bloecke 0/58 mit
+Klartext, nur `signature`; in Raw-API-Bodies redacted). Sichtbar bleiben:
+`effort` (z.B. high), die Thinking-*Token-Zahl* (nur aus Raw-Body-`usage`),
+und die Gesamt-`output_tokens` (Thinking eingerechnet). Fuer die Thesis als
+Limitation auszuweisen: interne Reasoning-Schritte sind nicht beobachtbar.
+
+**Caveats Max-Modus:** Bodies enthalten die ganze Konversation pro Call
+(Duplikation, Volumen); Tool-Inputs/Bash-Befehle/-Ausgaben koennen Secrets
+enthalten (kein Auto-Scrubbing) - im kontrollierten Lab vertretbar.
