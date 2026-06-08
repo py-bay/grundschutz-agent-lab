@@ -1,0 +1,8 @@
+# Diese Dateien laufen auf Linux (k3s / Betreiber-Laptop) -> immer LF,
+# auch wenn auf Windows editiert. Sonst bricht der Shebang / sshd.
+*.sh            text eol=lf
+entrypoint.sh   text eol=lf
+sshd_config     text eol=lf
+*.yaml          text eol=lf
+*.yml           text eol=lf
+Dockerfile      text eol=lf
