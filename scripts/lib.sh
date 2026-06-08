@@ -6,6 +6,15 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 NAMESPACE="${NAMESPACE:-grundschutz-lab}"
 IMAGE="${IMAGE:-ubuntu:24.04}"
 
+# kubectl-Aufruf: auf dem Laptop "kubectl" (braucht KUBECONFIG/Tunnel),
+# direkt auf dem k3s-Node "k3s kubectl" (nutzt /etc/rancher/k3s/k3s.yaml
+# automatisch, kein Tunnel noetig). Override per KUBECTL=... moeglich.
+if [[ -z "${KUBECTL:-}" ]]; then
+  if command -v kubectl >/dev/null 2>&1; then KUBECTL="kubectl"
+  elif command -v k3s >/dev/null 2>&1; then KUBECTL="k3s kubectl"
+  else KUBECTL="kubectl"; fi
+fi
+
 die() { echo "FEHLER: $*" >&2; exit 1; }
 info() { echo ">> $*" >&2; }
 

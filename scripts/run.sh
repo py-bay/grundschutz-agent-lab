@@ -25,7 +25,8 @@ while [[ $# -gt 0 ]]; do
 done
 [[ "$VARIANT" == "compliant" || "$VARIANT" == "non_compliant" ]] || die "Variante muss compliant|non_compliant sein"
 
-need kubectl; need envsubst; need openssl; need ssh-keygen
+need envsubst; need openssl; need ssh-keygen
+info "kubectl: $KUBECTL"
 
 # Szenario aufloesen (unter scenarios/*/<id>/)
 SCEN_DIR="$(find "$REPO_ROOT/scenarios" -maxdepth 2 -type d -name "$SCENARIO" | head -n1)"
@@ -70,25 +71,25 @@ info "Run-ID: $RUN_ID"
 info "Namespace/Pod: $NAMESPACE/$POD_NAME (node role=lab)"
 
 # --- Cluster-Objekte erzeugen ---
-kubectl apply -f "$REPO_ROOT/kubernetes/namespace.yaml" >/dev/null
-kubectl -n "$NAMESPACE" create configmap "$CM_NAME" --from-file=sshd_config="$SSHD_SRC" \
-  --dry-run=client -o yaml | kubectl apply -f - >/dev/null
-kubectl -n "$NAMESPACE" create secret generic "$SECRET_NAME" \
+$KUBECTL apply -f "$REPO_ROOT/kubernetes/namespace.yaml" >/dev/null
+$KUBECTL -n "$NAMESPACE" create configmap "$CM_NAME" --from-file=sshd_config="$SSHD_SRC" \
+  --dry-run=client -o yaml | $KUBECTL apply -f - >/dev/null
+$KUBECTL -n "$NAMESPACE" create secret generic "$SECRET_NAME" \
   --from-file=authorized_keys="$RUN_DIR/ssh/id_ed25519.pub" \
-  --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+  --dry-run=client -o yaml | $KUBECTL apply -f - >/dev/null
 # run-id-Label, damit teardown.sh ConfigMap/Secret eindeutig wieder findet
-kubectl -n "$NAMESPACE" label --overwrite configmap "$CM_NAME" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
-kubectl -n "$NAMESPACE" label --overwrite secret "$SECRET_NAME" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
+$KUBECTL -n "$NAMESPACE" label --overwrite configmap "$CM_NAME" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
+$KUBECTL -n "$NAMESPACE" label --overwrite secret "$SECRET_NAME" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
 
 export POD_NAME NAMESPACE IMAGE RUN_ID RUN_ID_LABEL SCENARIO REQ_ID REQ_ID_LABEL \
        VARIANT GT_HASH CONFIG_HASH CM_NAME SECRET_NAME
 envsubst '${POD_NAME} ${NAMESPACE} ${IMAGE} ${RUN_ID} ${RUN_ID_LABEL} ${SCENARIO} ${REQ_ID} ${REQ_ID_LABEL} ${VARIANT} ${GT_HASH} ${CONFIG_HASH} ${CM_NAME} ${SECRET_NAME}' \
   < "$REPO_ROOT/kubernetes/target-pod.tmpl.yaml" > "$RUN_DIR/pod.yaml"
-kubectl apply -f "$RUN_DIR/pod.yaml" >/dev/null
+$KUBECTL apply -f "$RUN_DIR/pod.yaml" >/dev/null
 
 info "warte auf Pod Ready (apt install openssh-server laeuft im Pod) ..."
-kubectl -n "$NAMESPACE" wait --for=condition=Ready "pod/$POD_NAME" --timeout=300s \
-  || die "Pod nicht Ready - 'kubectl -n $NAMESPACE describe pod $POD_NAME' pruefen"
+$KUBECTL -n "$NAMESPACE" wait --for=condition=Ready "pod/$POD_NAME" --timeout=300s \
+  || die "Pod nicht Ready - '$KUBECTL -n $NAMESPACE describe pod $POD_NAME' pruefen"
 
 # --- Manifest (pre-committed: Hashes stehen VOR dem Agentenlauf fest) ---
 cat > "$RUN_DIR/manifest.json" <<JSON
@@ -118,7 +119,7 @@ cat > "$RUN_DIR/manifest.json" <<JSON
 JSON
 
 # --- Port-Forward im Hintergrund ---
-kubectl -n "$NAMESPACE" port-forward "pod/$POD_NAME" "$PORT:22" >"$RUN_DIR/portforward.log" 2>&1 &
+$KUBECTL -n "$NAMESPACE" port-forward "pod/$POD_NAME" "$PORT:22" >"$RUN_DIR/portforward.log" 2>&1 &
 echo $! > "$RUN_DIR/portforward.pid"
 sleep 2
 

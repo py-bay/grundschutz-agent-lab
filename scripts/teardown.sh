@@ -61,8 +61,8 @@ if [[ "$KEEP" == false ]]; then
   jget() { sed -n "s/.*\"$1\":[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$MANIFEST" | head -n1; }
   POD="$(jget pod_name)"; LABEL="$(jget run_id_label)"
   [[ -n "$LABEL" ]] || LABEL="$(label_safe "$RUN_ID")"
-  kubectl -n "$NAMESPACE" delete pod "$POD" --ignore-not-found >/dev/null 2>&1 || true
-  kubectl -n "$NAMESPACE" delete configmap,secret -l "thesis.pybay.de/run-id=$LABEL" --ignore-not-found >/dev/null 2>&1 || true
+  $KUBECTL -n "$NAMESPACE" delete pod "$POD" --ignore-not-found >/dev/null 2>&1 || true
+  $KUBECTL -n "$NAMESPACE" delete configmap,secret -l "thesis.pybay.de/run-id=$LABEL" --ignore-not-found >/dev/null 2>&1 || true
   info "Pod $POD abgeraeumt (ConfigMap/Secret ueber Label run-id=$LABEL)."
 else
   info "Pod bleibt stehen (--keep)."

@@ -18,10 +18,14 @@ Lauf.
 
 ## Quickstart
 
+Vollstaendiger Durchlauf inkl. der Variante **ohne Tunnel (auf dem k3s-Node
+per Web-Terminal)**: [`docs/runbook-durchspiel.md`](docs/runbook-durchspiel.md).
+
 Voraussetzungen auf dem Betreiber-Laptop: `kubectl` mit gueltiger
 kubeconfig (ggf. SSH-Tunnel zum k3s-API), `envsubst`, `openssl`,
 `ssh-keygen`, sowie aktivierte Claude-Code-Telemetrie
-([`docs/telemetry.md`](docs/telemetry.md)).
+([`docs/telemetry.md`](docs/telemetry.md)). Auf dem Node laeuft stattdessen
+`k3s kubectl` (von den Scripts automatisch erkannt).
 
 ```bash
 # 1) Konformes Zielsystem hochziehen
