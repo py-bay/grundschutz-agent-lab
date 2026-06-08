@@ -1,0 +1,17 @@
+# Referenzzustand: NICHT KONFORM zu SYS.1.3.A8
+# Passwort-Login ueber SSH ist erlaubt -> verstoesst gegen die Vorgabe,
+# Authentifizierung vorrangig ueber Zertifikate/Schluessel abzuwickeln.
+# Effektive Pruefgroessen: PasswordAuthentication=yes.
+
+Include /etc/ssh/sshd_config.d/*.conf
+
+PermitRootLogin prohibit-password
+PubkeyAuthentication yes
+PasswordAuthentication yes
+KbdInteractiveAuthentication yes
+UsePAM yes
+
+X11Forwarding no
+PrintMotd no
+AcceptEnv LANG LC_*
+Subsystem	sftp	/usr/lib/openssh/sftp-server

@@ -1,0 +1,8 @@
+# Pro-Lauf-Artefakte: private Schluessel und ephemere Rendered-Manifeste
+# bleiben lokal. Das Run-Manifest (manifest.json) ist der versionierte
+# Nachweis und wird NICHT ignoriert.
+runs/*/ssh/
+runs/*/pod.yaml
+runs/*/portforward.pid
+runs/*/portforward.log
+!runs/.gitkeep

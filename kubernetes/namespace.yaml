@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: grundschutz-lab
+  labels:
+    thesis.pybay.de/purpose: agent-lab
+    pod-security.kubernetes.io/enforce: privileged   # sshd braucht Capabilities

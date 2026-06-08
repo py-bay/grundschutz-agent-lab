@@ -1,0 +1,80 @@
+# Ephemeres SSH-Zielsystem fuer einen einzelnen Lab-Lauf.
+# Wird von scripts/run.sh per envsubst gerendert und imperativ
+# (kubectl apply) erzeugt - bewusst NICHT von ArgoCD verwaltet, weil
+# der Reconcile-Loop gegen On-demand-Pods arbeiten wuerde.
+#
+# Bootstrap inline (apt install openssh-server) statt vorgebautem Image:
+# laesst den Lauf ohne Registry/imagePullSecret starten. Fuer die
+# eigentliche Evaluation auf das gepinnte Image aus images/ubuntu-sshd/
+# umstellen (Reproduzierbarkeit, kein apt-Drift) - siehe docs/methodology.md.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ${POD_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    thesis.pybay.de/run-id: "${RUN_ID_LABEL}"
+    thesis.pybay.de/scenario: "${SCENARIO}"
+    thesis.pybay.de/requirement: "${REQ_ID_LABEL}"
+    thesis.pybay.de/variant: "${VARIANT}"
+  annotations:
+    thesis.pybay.de/run-id-full: "${RUN_ID}"
+    thesis.pybay.de/requirement: "${REQ_ID}"
+    thesis.pybay.de/ground-truth-sha256: "${GT_HASH}"
+    thesis.pybay.de/config-sha256: "${CONFIG_HASH}"
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    role: lab
+  tolerations:
+    - key: lab
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+  containers:
+    - name: target
+      image: ${IMAGE}
+      command: ["/bin/bash", "-c"]
+      args:
+        - |
+          set -euo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y -qq openssh-server sudo >/dev/null
+          id audit >/dev/null 2>&1 || useradd -m -s /bin/bash audit
+          install -d -m 700 -o audit -g audit /home/audit/.ssh
+          install -m 600 -o audit -g audit /etc/thesis/authorized_keys /home/audit/.ssh/authorized_keys
+          cp /etc/thesis/sshd_config /etc/ssh/sshd_config
+          chmod 644 /etc/ssh/sshd_config
+          # read-only Tool-Layer: audit darf genau einen privilegierten Lesebefehl
+          echo 'audit ALL=(root) NOPASSWD: /usr/sbin/sshd -T' > /etc/sudoers.d/audit
+          chmod 440 /etc/sudoers.d/audit
+          ssh-keygen -A
+          mkdir -p /run/sshd
+          echo "[target] sshd startet (variant=${VARIANT}, run=${RUN_ID})"
+          exec /usr/sbin/sshd -D -e
+      ports:
+        - name: ssh
+          containerPort: 22
+      readinessProbe:
+        tcpSocket:
+          port: 22
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 40        # apt install kann dauern (~bis 200s)
+      volumeMounts:
+        - name: sshd-config
+          mountPath: /etc/thesis/sshd_config
+          subPath: sshd_config
+          readOnly: true
+        - name: authorized-keys
+          mountPath: /etc/thesis/authorized_keys
+          subPath: authorized_keys
+          readOnly: true
+  volumes:
+    - name: sshd-config
+      configMap:
+        name: ${CM_NAME}
+    - name: authorized-keys
+      secret:
+        secretName: ${SECRET_NAME}

@@ -1,0 +1,38 @@
+id: SYS.1.3.A8-ssh-cert-vs-password
+requirement_id: SYS.1.3.A8
+title: Verschluesselter Zugriff ueber Secure Shell - Zertifikat statt Passwort
+module: SYS.1.3
+module_name: Server unter Linux und Unix
+level: S            # BSI-Standard-Anforderung (SOLLTE)
+category: A         # technisch ablesbar aus der sshd-Effektivkonfiguration
+
+target_system: Linux-Server (Ubuntu 24.04, openssh-server) als k3s-Pod
+
+# Operationalisierung der Anforderung fuer den Prototyp.
+# A8-Originaltext fordert u.a.: "Fuer die Authentifizierung SOLLTEN
+# vorrangig Zertifikate anstatt eines Passworts verwendet werden."
+# Operationalisiert als binaere Pruefgroesse auf der Effektivkonfiguration:
+operationalization: >
+  Konform genau dann, wenn die effektive sshd-Konfiguration
+  PasswordAuthentication=no UND PubkeyAuthentication=yes meldet
+  (Pruefung via `sudo sshd -T`, nicht nur statische Datei).
+
+ground_truth: ground_truth.md   # pre-committed, je Lauf gehasht
+
+setup:
+  tools: [kubernetes, openssh-server]
+  entrypoint: scripts/run.sh
+  variants: [compliant, non_compliant]
+
+evidence:
+  expected_commands:
+    - "sudo sshd -T | grep -Ei 'passwordauthentication|pubkeyauthentication|kbdinteractiveauthentication'"
+    - "cat /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf 2>/dev/null"
+
+expected_result:
+  compliant:
+    compliant: true
+    rationale: "PasswordAuthentication no und PubkeyAuthentication yes in der Effektivkonfiguration."
+  non_compliant:
+    compliant: false
+    rationale: "PasswordAuthentication yes erlaubt interaktiven Passwort-Login."
