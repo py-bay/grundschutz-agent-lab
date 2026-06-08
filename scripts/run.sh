@@ -134,8 +134,13 @@ SSH-Zugang (read-only): $SSH_ACCESS"
 if [[ "$RUN_AGENT" == true ]]; then
   if command -v claude >/dev/null 2>&1; then
     info "starte Agent (claude -p --output-format json) ..."
+    # --allowedTools "Bash": im headless-Modus (claude -p) gibt es keine
+    # interaktive Freigabe; ohne Allowlist werden ssh/Bash-Calls still
+    # verweigert. Das Ziel-Pod ist ephemer + read-only (sudoers nur sshd -T),
+    # daher ist Bash-Freigabe im Lab vertretbar. (--dangerously-skip-permissions
+    # waere als root ohnehin gesperrt.)
     OTEL_RESOURCE_ATTRIBUTES="$OTEL_ATTRS" \
-      claude -p "$AGENT_PROMPT" --output-format json \
+      claude -p "$AGENT_PROMPT" --output-format json --allowedTools "Bash" \
         > "$RUN_DIR/agent_output.json" 2> "$RUN_DIR/agent_stderr.log" || true
     # vollstaendiges Session-Transcript (Prompt+Antwort+Tool-I/O) mitnehmen
     SID="$(sed -n 's/.*"session_id":[[:space:]]*"\([^"]*\)".*/\1/p' "$RUN_DIR/agent_output.json" | head -n1)"
@@ -160,7 +165,7 @@ cat >&2 <<EOF
  Agent (Claude Code) mit run.id-Telemetrie starten:
 
    OTEL_RESOURCE_ATTRIBUTES="$OTEL_ATTRS" \\
-   claude -p "\$(cat "$SCEN_DIR/check-prompt.md")
+   claude -p --allowedTools "Bash" "\$(cat "$SCEN_DIR/check-prompt.md")
 
    SSH-Zugang (read-only): ssh -i runs/$RUN_ID/ssh/id_ed25519 -o StrictHostKeyChecking=no -p $PORT audit@127.0.0.1"
 
