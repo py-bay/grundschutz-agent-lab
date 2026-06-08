@@ -5,7 +5,7 @@
 # Der Pod laeuft NICHT dauerhaft: teardown.sh raeumt ihn wieder ab.
 #
 # Aufruf:
-#   scripts/run.sh <scenario-id> <compliant|non_compliant> [--port 2222]
+#   scripts/run.sh <scenario-id> <compliant|non_compliant> [--port 12222]
 #
 # Voraussetzungen auf dem Betreiber-Laptop:
 #   - kubectl mit gueltiger kubeconfig (ggf. via SSH-Tunnel zum API-Server)
@@ -16,7 +16,9 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 [[ $# -ge 2 ]] || die "Aufruf: run.sh <scenario-id> <compliant|non_compliant> [--port N]"
 SCENARIO="$1"; VARIANT="$2"; shift 2
-PORT=2222
+# Default-Port bewusst NICHT 2222: dort lauscht auf dem Node oft Forgejos
+# eingebauter Go-SSH-Server -> Kollision (Agent landet auf Forgejo statt Pod).
+PORT=12222
 RUN_AGENT=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
