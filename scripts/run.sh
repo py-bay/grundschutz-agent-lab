@@ -182,21 +182,36 @@ $KUBECTL -n "$NAMESPACE" port-forward "pod/$POD_NAME" "$PORT:22" >"$RUN_DIR/port
 echo $! > "$RUN_DIR/portforward.pid"
 sleep 2
 
-SSH_ACCESS="ssh -i runs/$RUN_ID/ssh/id_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p $PORT audit@127.0.0.1"
-AGENT_PROMPT="$(cat "$SCEN_DIR/check-prompt.md")
-
-SSH-Zugang (read-only): $SSH_ACCESS"
+# --- Preflight: SSH-Login MUSS funktionieren, sonst ist der Lauf nicht auswertbar ---
+# Verhindert False Pass aus falschem Grund (Agent kommt nie auf den Host und
+# urteilt zufaellig "nicht verifizierbar"). Bei Fehlschlag: harter Abbruch,
+# kein Agentenlauf, Pod bleibt zur Diagnose stehen.
+if ! ssh -i "$RUN_DIR/ssh/id_ed25519" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+       -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o BatchMode=yes \
+       -o ConnectTimeout=10 -p "$PORT" audit@127.0.0.1 true 2>"$RUN_DIR/preflight.log"; then
+  die "Preflight-SSH fehlgeschlagen (audit@127.0.0.1:$PORT) - Lauf NICHT auswertbar, kein Agent gestartet. Details: $RUN_DIR/preflight.log | abraeumen: scripts/teardown.sh $RUN_ID"
+fi
+info "Preflight-SSH ok (audit-Login funktioniert)."
 
 # --- Schicht 2: Agent fahren + vollstaendigen Output pro Lauf sichern ---
 if [[ "$RUN_AGENT" == true ]]; then
   if command -v claude >/dev/null 2>&1; then
-    info "starte Agent (claude -p --output-format json) ..."
+    # DZ2-Isolation: Agent laeuft in einem leeren Arbeitsverzeichnis AUSSERHALB
+    # des Repos; nur der private SSH-Key liegt dort. So kein Zugriff auf Ground
+    # Truth, Szenario-Dateien oder variant.env (das erwartete Urteil).
+    AGENT_CWD="$(mktemp -d "${TMPDIR:-/tmp}/lab-agent-XXXXXX")"
+    cp "$RUN_DIR/ssh/id_ed25519" "$AGENT_CWD/id_ed25519"
+    chmod 600 "$AGENT_CWD/id_ed25519"
+    AGENT_PROMPT="$(cat "$SCEN_DIR/check-prompt.md")
+
+SSH-Zugang (read-only): ssh -i id_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p $PORT audit@127.0.0.1"
+    info "starte Agent (claude -p --output-format json) in isoliertem CWD ..."
     # --allowedTools "Bash": im headless-Modus (claude -p) gibt es keine
     # interaktive Freigabe; ohne Allowlist werden ssh/Bash-Calls still
     # verweigert. Das Ziel-Pod ist ephemer + read-only (sudoers-Whitelist),
     # daher ist Bash-Freigabe im Lab vertretbar.
-    OTEL_RESOURCE_ATTRIBUTES="$OTEL_ATTRS" \
-      claude -p "$AGENT_PROMPT" --output-format json --allowedTools "Bash" \
+    ( cd "$AGENT_CWD" && OTEL_RESOURCE_ATTRIBUTES="$OTEL_ATTRS" \
+        claude -p "$AGENT_PROMPT" --output-format json --allowedTools "Bash" ) \
         > "$RUN_DIR/agent_output.json" 2> "$RUN_DIR/agent_stderr.log" || true
     # vollstaendiges Session-Transcript (Prompt+Antwort+Tool-I/O) mitnehmen
     SID="$(sed -n 's/.*"session_id":[[:space:]]*"\([^"]*\)".*/\1/p' "$RUN_DIR/agent_output.json" | head -n1)"
@@ -204,6 +219,7 @@ if [[ "$RUN_AGENT" == true ]]; then
       TRANSCRIPT="$(find "$HOME/.claude/projects" -name "$SID.jsonl" 2>/dev/null | head -n1)"
       [[ -n "$TRANSCRIPT" ]] && cp "$TRANSCRIPT" "$RUN_DIR/transcript.jsonl"
     fi
+    rm -f "$AGENT_CWD/id_ed25519"; rmdir "$AGENT_CWD" 2>/dev/null || true
     info "Agent fertig -> runs/$RUN_ID/agent_output.json (+ transcript.jsonl falls gefunden)"
     info "Urteil festhalten + abraeumen: scripts/teardown.sh $RUN_ID --verdict <konform|nicht_konform|nicht_verifizierbar>"
     echo "$RUN_ID"

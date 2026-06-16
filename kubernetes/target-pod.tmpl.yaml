@@ -50,11 +50,16 @@ spec:
           install -d -m 700 -o audit -g audit /home/audit/.ssh
           install -m 600 -o audit -g audit /etc/thesis-auth/authorized_keys /home/audit/.ssh/authorized_keys
           # Sichere Default-sshd_config: Pubkey-Login fuer audit, kein Passwort.
-          # setup.sh darf sie szenariospezifisch ueberschreiben (z.B. A8).
+          # UsePAM yes ist NOETIG: das frisch angelegte audit-Konto hat ein
+          # gesperrtes Passwort (!); ohne PAM wertet sshd es als "invalid user"
+          # und lehnt auch Pubkey-Auth ab. setup.sh darf die Datei
+          # szenariospezifisch ueberschreiben (z.B. A8).
           cat > /etc/ssh/sshd_config <<'SSHD'
           Port 22
           PubkeyAuthentication yes
           PasswordAuthentication no
+          KbdInteractiveAuthentication no
+          UsePAM yes
           PermitRootLogin no
           AuthorizedKeysFile /home/audit/.ssh/authorized_keys
           Subsystem sftp /usr/lib/openssh/sftp-server
@@ -88,7 +93,7 @@ spec:
     - name: scenario
       configMap:
         name: ${CM_NAME}
-        defaultMode: 0755          # setup.sh ausfuehrbar
+        defaultMode: 0600          # root liest/fuehrt aus; audit sieht setup.sh/sudoers-Inhalt nicht (Anti-Leakage)
     - name: authorized-keys
       secret:
         secretName: ${SECRET_NAME}
