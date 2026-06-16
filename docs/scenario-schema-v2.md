@@ -1,10 +1,14 @@
 # Szenario-Schema v2 (Coverage-Design) — Skizze
 
-Stand: 2026-06-15 · Entwurf parallel zur Lab-Traeger-Selektion
-(`bsi-grundschutz-classification/data/lab_sample/`). Beschreibt, was die
-Generalisierung der Maschinerie vom A-Durchstich (SYS.1.3.A8) auf das
-dreiwertige Coverage-Design braucht. Noch nicht implementiert — dient als
-gemeinsamer Vertrag zwischen Selektion, Fall-Konstruktion und Runner.
+Stand: 2026-06-16 · Generalisierung der Maschinerie vom A-Durchstich
+(SYS.1.3.A8) auf das dreiwertige Coverage-Design.
+
+**Status:** Generalisierungen 1-4 in `run.sh`/`teardown.sh`/
+`kubernetes/target-pod.tmpl.yaml` umgesetzt; erstes v2-Szenario gebaut
+(`scenarios/linux-server/SYS.1.3.A17-kernel-hardening-rootonly`, Zelle 4,
+Pilot Stufe 2). Der A8-Durchstich laeuft unveraendert ueber einen
+Legacy-Zweig weiter. Offen: k=4-Runner + pass^k-Aggregation, End-to-End-Lauf
+gegen den Cluster.
 
 ## Was v1 kann und wo es endet
 

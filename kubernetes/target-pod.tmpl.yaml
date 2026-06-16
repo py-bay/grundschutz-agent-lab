@@ -3,6 +3,10 @@
 # (kubectl apply) erzeugt - bewusst NICHT von ArgoCD verwaltet, weil
 # der Reconcile-Loop gegen On-demand-Pods arbeiten wuerde.
 #
+# Schema v2: generischer Bootstrap. Der Zielzustand kommt aus dem pro Lauf
+# gemounteten Szenario-Verzeichnis (/etc/thesis): setup.sh etabliert ihn,
+# audit_sudoers ist die read-only Kommando-Whitelist dieses Szenarios.
+#
 # Bootstrap inline (apt install openssh-server) statt vorgebautem Image:
 # laesst den Lauf ohne Registry/imagePullSecret starten. Fuer die
 # eigentliche Evaluation auf das gepinnte Image aus images/ubuntu-sshd/
@@ -16,12 +20,13 @@ metadata:
     thesis.pybay.de/run-id: "${RUN_ID_LABEL}"
     thesis.pybay.de/scenario: "${SCENARIO}"
     thesis.pybay.de/requirement: "${REQ_ID_LABEL}"
-    thesis.pybay.de/variant: "${VARIANT}"
+    thesis.pybay.de/variant: "${VARIANT_LABEL}"
+    thesis.pybay.de/cell: "${CELL_LABEL}"
   annotations:
     thesis.pybay.de/run-id-full: "${RUN_ID}"
     thesis.pybay.de/requirement: "${REQ_ID}"
     thesis.pybay.de/ground-truth-sha256: "${GT_HASH}"
-    thesis.pybay.de/config-sha256: "${CONFIG_HASH}"
+    thesis.pybay.de/state-sha256: "${STATE_HASH}"
 spec:
   restartPolicy: Never
   nodeSelector:
@@ -43,15 +48,25 @@ spec:
           apt-get install -y -qq openssh-server sudo >/dev/null
           id audit >/dev/null 2>&1 || useradd -m -s /bin/bash audit
           install -d -m 700 -o audit -g audit /home/audit/.ssh
-          install -m 600 -o audit -g audit /etc/thesis/authorized_keys /home/audit/.ssh/authorized_keys
-          cp /etc/thesis/sshd_config /etc/ssh/sshd_config
+          install -m 600 -o audit -g audit /etc/thesis-auth/authorized_keys /home/audit/.ssh/authorized_keys
+          # Sichere Default-sshd_config: Pubkey-Login fuer audit, kein Passwort.
+          # setup.sh darf sie szenariospezifisch ueberschreiben (z.B. A8).
+          cat > /etc/ssh/sshd_config <<'SSHD'
+          Port 22
+          PubkeyAuthentication yes
+          PasswordAuthentication no
+          PermitRootLogin no
+          AuthorizedKeysFile /home/audit/.ssh/authorized_keys
+          Subsystem sftp /usr/lib/openssh/sftp-server
+          SSHD
           chmod 644 /etc/ssh/sshd_config
-          # read-only Tool-Layer: audit darf genau einen privilegierten Lesebefehl
-          echo 'audit ALL=(root) NOPASSWD: /usr/sbin/sshd -T' > /etc/sudoers.d/audit
-          chmod 440 /etc/sudoers.d/audit
+          # read-only Tool-Layer: szenario-eigene Kommando-Whitelist (DZ6)
+          install -m 440 /etc/thesis/audit_sudoers /etc/sudoers.d/audit
+          # Zielzustand etablieren (laeuft als root im Bootstrap)
+          bash /etc/thesis/setup.sh
           ssh-keygen -A
           mkdir -p /run/sshd
-          echo "[target] sshd startet (variant=${VARIANT}, run=${RUN_ID})"
+          echo "[target] sshd startet (variant=${VARIANT}, cell=${CELL_LABEL}, run=${RUN_ID})"
           exec /usr/sbin/sshd -D -e
       ports:
         - name: ssh
@@ -63,18 +78,17 @@ spec:
         periodSeconds: 5
         failureThreshold: 40        # apt install kann dauern (~bis 200s)
       volumeMounts:
-        - name: sshd-config
-          mountPath: /etc/thesis/sshd_config
-          subPath: sshd_config
+        - name: scenario
+          mountPath: /etc/thesis
           readOnly: true
         - name: authorized-keys
-          mountPath: /etc/thesis/authorized_keys
-          subPath: authorized_keys
+          mountPath: /etc/thesis-auth
           readOnly: true
   volumes:
-    - name: sshd-config
+    - name: scenario
       configMap:
         name: ${CM_NAME}
+        defaultMode: 0755          # setup.sh ausfuehrbar
     - name: authorized-keys
       secret:
         secretName: ${SECRET_NAME}

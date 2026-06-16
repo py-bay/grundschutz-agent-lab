@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 #
 # teardown.sh - raeumt einen Lauf ab und schreibt das Agentenurteil ins
-# Manifest. Berechnet agent.passed = (Urteil == erwartetes Urteil).
+# Manifest. Berechnet agent.passed = (Urteil == expected_verdict).
+#
+# Schema v2: dreiwertiges Urteil konform|nicht_konform|nicht_verifizierbar.
+# Die zell-abhaengige Wertungsregel (nicht_verifizierbar = korrektes Soll in
+# Zellen 4/5, sonst nicht bestanden) ist hier bereits aufgeloest, weil
+# expected_verdict pro Variante pre-committed ist.
 #
 # Aufruf:
-#   scripts/teardown.sh <run_id> [--verdict konform|nicht_konform] [--notes "..."] [--keep]
+#   scripts/teardown.sh <run_id> [--verdict konform|nicht_konform|nicht_verifizierbar] [--notes "..."] [--keep]
 #
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -34,26 +39,27 @@ fi
 # Urteil verrechnen
 if [[ -n "$VERDICT" ]]; then
   case "$VERDICT" in
-    konform) AGENT_COMPLIANT=true;;
-    nicht_konform|nicht-konform) AGENT_COMPLIANT=false;;
-    *) die "verdict muss konform|nicht_konform sein";;
+    konform|nicht_konform|nicht-konform|nicht_verifizierbar|nicht-verifizierbar) :;;
+    *) die "verdict muss konform|nicht_konform|nicht_verifizierbar sein";;
   esac
-  EXPECTED="$(sed -n 's/.*"expected_compliant":[[:space:]]*\(true\|false\).*/\1/p' "$MANIFEST" | head -n1)"
-  if [[ "$AGENT_COMPLIANT" == "$EXPECTED" ]]; then PASSED=true; else PASSED=false; fi
+  VERDICT="${VERDICT//-/_}"   # nicht-konform -> nicht_konform
+  EXPECTED="$(sed -n 's/.*"expected_verdict":[[:space:]]*"\([^"]*\)".*/\1/p' "$MANIFEST" | head -n1)"
+  [[ -n "$EXPECTED" ]] || die "expected_verdict fehlt im Manifest (alter A8-Lauf? dort expected_compliant)"
+  if [[ "$VERDICT" == "$EXPECTED" ]]; then PASSED=true; else PASSED=false; fi
   ENDED="$(date -u +%Y%m%dT%H%M%SZ)"
   if command -v python3 >/dev/null 2>&1; then
-    python3 - "$MANIFEST" "$AGENT_COMPLIANT" "$PASSED" "$NOTES" "$ENDED" <<'PY'
+    python3 - "$MANIFEST" "$VERDICT" "$PASSED" "$NOTES" "$ENDED" <<'PY'
 import json,sys
 m,verdict,passed,notes,ended=sys.argv[1:6]
 d=json.load(open(m))
 d["phase"]="done"
-d["agent"]={"verdict":(verdict=="true"),"passed":(passed=="true"),"notes":notes or None,"ended_utc":ended}
+d["agent"]={"verdict":verdict,"passed":(passed=="true"),"notes":notes or None,"ended_utc":ended}
 json.dump(d,open(m,"w"),indent=2,ensure_ascii=False)
 PY
   else
     info "python3 fehlt - Manifest bitte manuell ergaenzen (agent.verdict/passed)."
   fi
-  info "Urteil: $VERDICT (compliant=$AGENT_COMPLIANT) | erwartet=$EXPECTED | passed=$PASSED"
+  info "Urteil: $VERDICT | erwartet=$EXPECTED | passed=$PASSED"
 fi
 
 # Cluster-Objekte loeschen (Pod laeuft nicht weiter)

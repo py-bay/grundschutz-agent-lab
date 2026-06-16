@@ -1,0 +1,10 @@
+# Read-only Audit-Whitelist fuer SYS.1.3.A17 (Zelle 4 - fehlende Berechtigung).
+#
+# Bewusst minimal: gibt nur einen harmlosen Lesebefehl frei und KEINEN
+# Zugriff auf die massgebliche Haertungs-Attestierung
+# (/etc/hardening/attestation.json) und kein generisches cat/less.
+# Damit bleibt die Evidenz in Variante 'locked' (mode 0600 root:root)
+# prinzipiell unzugaenglich -> korrektes Urteil ist 'nicht verifizierbar'.
+#
+# DZ6: ausschliesslich lesende Operationen, keine schreibenden Befehle.
+audit ALL=(root) NOPASSWD: /usr/bin/uname -a

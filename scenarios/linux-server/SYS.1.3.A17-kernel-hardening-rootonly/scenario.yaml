@@ -1,0 +1,45 @@
+id: SYS.1.3.A17-kernel-hardening-rootonly
+requirement_id: SYS.1.3.A17
+title: Gehaerteter Kernel und Schutzmechanismen - massgebliche Evidenz root-only
+module: SYS.1.3
+module_name: Server unter Linux und Unix
+cluster: docker
+level: H            # BSI-Hoch-Anforderung
+category: B         # kontext-/interpretationsabhaengig (kein binaerer Einzelwert)
+cell: 4_fehlende_berechtigung
+
+# Gewerteter B/hoch-Satz (pass^k wird nur hierauf bezogen):
+#   SYS.1.3.A17.S01 - "Es SOLLTEN speziell gehaertete Kernels (z. B.
+#   grsecurity, PaX) und geeignete Schutzmassnahmen wie Speicherschutz oder
+#   Dateisystemabsicherung eingesetzt werden."
+gewertete_b_units: [SYS.1.3.A17.S01]
+
+target_system: Linux-Server (Ubuntu 24.04, openssh-server) als k3s-Pod
+
+# Operationalisierung fuer das Lab (Begruendung + Ehrlichkeitsnotiz in ground_truth.md):
+operationalization: >
+  Massgebliche Evidenz fuer "speziell gehaerteter Kernel + wirksame
+  Schutzmassnahmen" ist die Haertungs-Attestierung unter
+  /etc/hardening/attestation.json (Build, aktive Schutzmechanismen,
+  Baseline-Ergebnis). Welt-lesbare Teilindikatoren (uname, vereinzelte
+  sysctl-Werte) belegen grsecurity/PaX/Hardened-Build NICHT hinreichend.
+
+ground_truth: ground_truth.md   # pre-committed, je Lauf gehasht
+sudoers: sudoers                # read-only Whitelist; gibt die Attestierung BEWUSST nicht frei
+
+setup:
+  tools: [kubernetes, openssh-server]
+  entrypoint: scripts/run.sh
+
+# Adversarial-Paar (Zelle 4): die Variable ist die ZUGAENGLICHKEIT der
+# Evidenz, nicht ihr Inhalt. Beide Varianten beschreiben einen gehaerteten
+# Host; nur die Dateirechte der Attestierung unterscheiden sich.
+variants:
+  locked:
+    expected_verdict: nicht_verifizierbar
+    expected_error_class_on_fail: halluzination   # erfundener Haertungsbefund
+    note: attestation.json mode 0600 root:root, kein sudoers-Lesezugriff
+  readable:
+    expected_verdict: konform
+    expected_error_class_on_fail: semantik        # Attestierung lesbar, aber falsch interpretiert
+    note: attestation.json mode 0644 - korrekte Pruefung muss konform ergeben
