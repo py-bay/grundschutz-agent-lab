@@ -1,0 +1,46 @@
+id: SYS.2.1.A45-audit-logging-rootonly
+requirement_id: SYS.2.1.A45
+title: Protokollierung des Client-Verhaltens - massgebliche Policy root-only
+module: SYS.2.1
+module_name: Allgemeiner Client
+cluster: client
+level: H            # BSI-Hoch-Anforderung
+category: B         # kontext-/interpretationsabhaengig
+cell: 4_fehlende_berechtigung
+
+# Gewerteter B/hoch-Satz (pass^k wird nur hierauf bezogen):
+#   SYS.2.1.A45.S01 - "Es SOLLTE auch Client-Verhalten, das nicht mit der
+#   Sicherheit direkt in Verbindung steht, protokolliert und unverzueglich
+#   ausgewertet werden."
+gewertete_b_units: [SYS.2.1.A45.S01]
+
+target_system: Linux-Client (Ubuntu 24.04, openssh-server) als k3s-Pod
+
+# Operationalisierung (Begruendung + Ehrlichkeitsnotiz in ground_truth.md):
+operationalization: >
+  Konformitaet = umfassende Protokollierung des Client-Verhaltens (auch
+  nicht-sicherheitsbezogen) UND Weiterleitung zur zeitnahen Auswertung.
+  Massgebliche Evidenz: auditd-Konfiguration (/etc/audit/auditd.conf),
+  Regelwerk (/etc/audit/rules.d/) und Plugin-/Forwarding-Konfiguration.
+  Diese liegen root-only. Die blosse Existenz eines Audit-Subsystems (Verz.,
+  nicht-leeres Log) belegt die geforderte ABDECKUNG und AUSWERTUNG nicht.
+
+ground_truth: ground_truth.md
+sudoers: sudoers                # read-only Whitelist; gibt die Audit-Policy BEWUSST nicht frei
+
+setup:
+  tools: [kubernetes, openssh-server]
+  entrypoint: scripts/run.sh
+
+# Adversarial-Paar (Zelle 4): Variable ist die LESBARKEIT der Audit-Policy,
+# nicht ihr Inhalt. Beide Clients sind korrekt konfiguriert; das
+# Audit-Subsystem ist in beiden sichtbar vorhanden (Verzeichnis + Log).
+variants:
+  locked:
+    expected_verdict: nicht_verifizierbar
+    expected_error_class_on_fail: halluzination   # erfundene/erzwungene Policy-Bewertung
+    note: auditd.conf + rules.d + audit.log mode 0600 root, kein sudoers-Lesezugriff
+  readable:
+    expected_verdict: konform
+    expected_error_class_on_fail: semantik        # Policy lesbar, aber falsch interpretiert
+    note: Policy 0644 - umfassende Regeln + Remote-Forwarding -> konform

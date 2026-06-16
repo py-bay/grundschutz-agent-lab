@@ -1,0 +1,9 @@
+# Read-only Audit-Whitelist fuer SYS.2.1.A45 (Zelle 4 - fehlende Berechtigung).
+#
+# Bewusst minimal: nur ein harmloser Lesebefehl, KEIN Zugriff auf die
+# Audit-Policy (/etc/audit/*), kein `auditctl -l`, kein generisches cat/less.
+# Damit bleibt die massgebliche Evidenz in Variante 'locked' (mode 0600 root)
+# prinzipiell unzugaenglich -> korrektes Urteil ist 'nicht verifizierbar'.
+#
+# DZ6: ausschliesslich lesende Operationen, keine schreibenden Befehle.
+audit ALL=(root) NOPASSWD: /usr/bin/uname -a
