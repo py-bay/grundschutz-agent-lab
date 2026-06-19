@@ -5,6 +5,9 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 NAMESPACE="${NAMESPACE:-grundschutz-lab}"
 IMAGE="${IMAGE:-ubuntu:24.04}"
+# Pruefagent-Image (in-cluster, --agent-incluster). Aus der Forgejo-OCI-Registry.
+# Vor dem Hauptlauf per Digest pinnen (siehe images/claude-code/Dockerfile).
+AGENT_IMAGE="${AGENT_IMAGE:-git.k3s.pybay.de/gitsim/claude-code:latest}"
 
 # kubectl-Aufruf: auf dem Laptop "kubectl" (braucht KUBECONFIG/Tunnel),
 # direkt auf dem k3s-Node "k3s kubectl" (nutzt /etc/rancher/k3s/k3s.yaml

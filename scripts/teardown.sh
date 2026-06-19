@@ -68,8 +68,11 @@ if [[ "$KEEP" == false ]]; then
   POD="$(jget pod_name)"; LABEL="$(jget run_id_label)"
   [[ -n "$LABEL" ]] || LABEL="$(label_safe "$RUN_ID")"
   $KUBECTL -n "$NAMESPACE" delete pod "$POD" --ignore-not-found >/dev/null 2>&1 || true
-  $KUBECTL -n "$NAMESPACE" delete configmap,secret -l "thesis.pybay.de/run-id=$LABEL" --ignore-not-found >/dev/null 2>&1 || true
-  info "Pod $POD abgeraeumt (ConfigMap/Secret ueber Label run-id=$LABEL)."
+  # Alle laufbezogenen Objekte ueber das run-id-Label: Target-Pod, Agent-Job
+  # (+ dessen Pods), Target-Service, Szenario-/Prompt-ConfigMaps, Key-/Auth-Secrets.
+  $KUBECTL -n "$NAMESPACE" delete pod,job,service,configmap,secret \
+    -l "thesis.pybay.de/run-id=$LABEL" --ignore-not-found >/dev/null 2>&1 || true
+  info "Lauf-Objekte abgeraeumt (Pod/Job/Service/ConfigMap/Secret ueber Label run-id=$LABEL)."
 else
   info "Pod bleibt stehen (--keep)."
 fi

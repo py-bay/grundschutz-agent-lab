@@ -28,10 +28,12 @@ SCENARIO="$1"; VARIANT="$2"; shift 2
 # eingebauter Go-SSH-Server -> Kollision (Agent landet auf Forgejo statt Pod).
 PORT=12222
 RUN_AGENT=false
+AGENT_INCLUSTER=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --port) PORT="$2"; shift 2;;
-    --agent) RUN_AGENT=true; shift;;       # claude direkt fahren + Output pro Lauf sichern
+    --agent) RUN_AGENT=true; shift;;                       # claude lokal auf dem Operator (Dev/Fallback)
+    --agent-incluster) AGENT_INCLUSTER=true; RUN_AGENT=true; shift;;  # claude als k8s-Job (laptop-frei, Standard fuer den Hauptlauf)
     *) die "unbekanntes Argument: $1";;
   esac
 done
@@ -193,7 +195,85 @@ if ! ssh -i "$RUN_DIR/ssh/id_ed25519" -o StrictHostKeyChecking=no -o UserKnownHo
 fi
 info "Preflight-SSH ok (audit-Login funktioniert)."
 
-# --- Schicht 2: Agent fahren + vollstaendigen Output pro Lauf sichern ---
+# --- Schicht 2a: Agent als k8s-Job IN-CLUSTER (laptop-frei) ---
+# DZ2 per Konstruktion ueber Dateisystem-Isolation: der Agent-Pod bekommt nur
+# Pruef-Prompt (ConfigMap, ohne GT) + privaten Key (Secret), keinen Repo-/Host-
+# Mount, kein ServiceAccount-Token. Die Ground Truth liegt nur hier operator-
+# seitig und gelangt nie in den Cluster. Der Preflight oben bleibt der einzige
+# operator-seitige SSH-Schritt; den Port-Forward braucht der In-Cluster-Agent
+# nicht (er erreicht das Target ueber einen headless Service).
+if [[ "$AGENT_INCLUSTER" == true ]]; then
+  if [[ -f "$RUN_DIR/portforward.pid" ]]; then
+    kill "$(cat "$RUN_DIR/portforward.pid")" 2>/dev/null || true
+    rm -f "$RUN_DIR/portforward.pid"
+  fi
+  $KUBECTL -n "$NAMESPACE" get secret claude-oauth >/dev/null 2>&1 \
+    || die "Secret 'claude-oauth' fehlt im Namespace $NAMESPACE - einmalig anlegen (siehe README/runbook)."
+  $KUBECTL -n "$NAMESPACE" get secret otel-auth >/dev/null 2>&1 \
+    || die "Secret 'otel-auth' fehlt im Namespace $NAMESPACE - einmalig anlegen (siehe README/runbook)."
+
+  TARGET_SVC="target-svc-$(sanitize "${VARIANT}-${RAND}")"
+  JOB_NAME="agent-$(sanitize "${VARIANT}-${RAND}")"
+  AGENT_KEY_SECRET="agentkey-$(sanitize "${VARIANT}-${RAND}")"
+  AGENT_PROMPT_CM="agentprompt-$(sanitize "${VARIANT}-${RAND}")"
+
+  # Headless Service -> stabiler DNS-Name auf das Target-Pod dieses Laufs.
+  export TARGET_SVC NAMESPACE RUN_ID_LABEL
+  envsubst '${TARGET_SVC} ${NAMESPACE} ${RUN_ID_LABEL}' \
+    < "$REPO_ROOT/kubernetes/target-service.tmpl.yaml" > "$RUN_DIR/target-service.yaml"
+  $KUBECTL apply -f "$RUN_DIR/target-service.yaml" >/dev/null
+
+  # per-run Key-Secret (privater Key fuer den Agenten).
+  $KUBECTL -n "$NAMESPACE" create secret generic "$AGENT_KEY_SECRET" \
+    --from-file=id_ed25519="$RUN_DIR/ssh/id_ed25519" \
+    --dry-run=client -o yaml | $KUBECTL apply -f - >/dev/null
+
+  # Pruef-Prompt: check-prompt.md (OHNE GT) + Zugangszeile auf den Service.
+  # Schluesselpfad absolut (Entrypoint kopiert nach /home/agent/.ssh).
+  PROMPT_FILE="$RUN_DIR/agent-prompt.md"
+  {
+    cat "$SCEN_DIR/check-prompt.md"
+    printf '\nSSH-Zugang (read-only): ssh -i /home/agent/.ssh/id_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 22 audit@%s.%s.svc.cluster.local\n' \
+      "$TARGET_SVC" "$NAMESPACE"
+  } > "$PROMPT_FILE"
+  $KUBECTL -n "$NAMESPACE" create configmap "$AGENT_PROMPT_CM" \
+    --from-file=check-prompt.md="$PROMPT_FILE" \
+    --dry-run=client -o yaml | $KUBECTL apply -f - >/dev/null
+
+  # Label fuer label-basiertes teardown.
+  $KUBECTL -n "$NAMESPACE" label --overwrite secret "$AGENT_KEY_SECRET" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
+  $KUBECTL -n "$NAMESPACE" label --overwrite configmap "$AGENT_PROMPT_CM" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
+  $KUBECTL -n "$NAMESPACE" label --overwrite service "$TARGET_SVC" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
+
+  # Agent-Job rendern + starten.
+  export JOB_NAME AGENT_IMAGE AGENT_KEY_SECRET AGENT_PROMPT_CM OTEL_ATTRS REQ_ID_LABEL CELL_LABEL
+  envsubst '${JOB_NAME} ${NAMESPACE} ${RUN_ID_LABEL} ${REQ_ID_LABEL} ${CELL_LABEL} ${AGENT_IMAGE} ${AGENT_KEY_SECRET} ${AGENT_PROMPT_CM} ${OTEL_ATTRS}' \
+    < "$REPO_ROOT/kubernetes/agent-job.tmpl.yaml" > "$RUN_DIR/agent-job.yaml"
+  $KUBECTL apply -f "$RUN_DIR/agent-job.yaml" >/dev/null
+  info "Agent-Job $JOB_NAME gestartet (Image $AGENT_IMAGE), warte auf Completion ..."
+
+  # Auf Abschluss warten (complete ODER failed), Logs unabhaengig vom Status holen.
+  $KUBECTL -n "$NAMESPACE" wait --for=condition=complete "job/$JOB_NAME" --timeout=600s 2>/dev/null \
+    || $KUBECTL -n "$NAMESPACE" wait --for=condition=failed "job/$JOB_NAME" --timeout=10s 2>/dev/null || true
+
+  $KUBECTL -n "$NAMESPACE" logs "job/$JOB_NAME" --tail=-1 > "$RUN_DIR/agent_job.log" 2>/dev/null || true
+  # Marker-getrennte stdout in die Lauf-Artefakte zerlegen.
+  awk -v out="$RUN_DIR/agent_output.json" -v err="$RUN_DIR/agent_stderr.log" -v tr="$RUN_DIR/transcript.jsonl" '
+    /^===AGENT_OUTPUT_JSON===$/{f="o";next} /^===AGENT_STDERR===$/{f="e";next}
+    /^===TRANSCRIPT_JSONL===$/{f="t";next} /^===END===$/{f="";next}
+    f=="o"{print > out} f=="e"{print > err} f=="t"{print > tr}' "$RUN_DIR/agent_job.log" 2>/dev/null || true
+
+  if [[ -s "$RUN_DIR/agent_output.json" ]]; then
+    info "Agent fertig -> runs/$RUN_ID/agent_output.json (+ transcript.jsonl, agent_job.log)"
+  else
+    info "WARNUNG: kein agent_output.json aus den Job-Logs extrahiert - runs/$RUN_ID/agent_job.log pruefen."
+  fi
+  info "Urteil festhalten + abraeumen: scripts/teardown.sh $RUN_ID --verdict <konform|nicht_konform|nicht_verifizierbar>"
+  echo "$RUN_ID"
+  exit 0
+fi
+
+# --- Schicht 2b: Agent lokal auf dem Operator (Dev/Fallback, --agent) ---
 if [[ "$RUN_AGENT" == true ]]; then
   if command -v claude >/dev/null 2>&1; then
     # DZ2-Isolation: Agent laeuft in einem leeren Arbeitsverzeichnis AUSSERHALB

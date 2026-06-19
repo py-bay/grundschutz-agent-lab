@@ -1,0 +1,88 @@
+# Pruefagent als ephemerer k8s-Job (Schema v2, in-cluster, laptop-frei).
+# Von scripts/run.sh per envsubst gerendert und imperativ erzeugt.
+#
+# DZ2 (Leakage-Freiheit) per Konstruktion ueber Dateisystem-Isolation:
+#   - KEIN Repo-/GT-/Host-Mount. Die Ground Truth liegt nur operator-seitig
+#     im Dateisystem, nie in einem Pod/einer ConfigMap.
+#   - automountServiceAccountToken: false -> kein Zugriff auf die k8s-API
+#     (kann keine fremden ConfigMaps/Secrets lesen).
+#   - Gemountet wird nur: per-run SSH-Key (Secret) + Pruef-Prompt ohne GT (CM).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ${JOB_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    thesis.pybay.de/run-id: "${RUN_ID_LABEL}"
+    thesis.pybay.de/requirement: "${REQ_ID_LABEL}"
+    thesis.pybay.de/cell: "${CELL_LABEL}"
+    thesis.pybay.de/role: "agent"
+spec:
+  backoffLimit: 0                 # kein Retry: ein Lauf = ein Versuch (pass^k zaehlt extern)
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        thesis.pybay.de/run-id: "${RUN_ID_LABEL}"
+        thesis.pybay.de/role: "agent"
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      nodeSelector:
+        role: lab
+      tolerations:
+        - key: lab
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      containers:
+        - name: agent
+          image: ${AGENT_IMAGE}
+          env:
+            - name: CLAUDE_CODE_OAUTH_TOKEN
+              valueFrom:
+                secretKeyRef: { name: claude-oauth, key: token }
+            - name: CLAUDE_CODE_ENABLE_TELEMETRY
+              value: "1"
+            - name: OTEL_METRICS_EXPORTER
+              value: "otlp"
+            - name: OTEL_LOGS_EXPORTER
+              value: "otlp"
+            - name: OTEL_TRACES_EXPORTER
+              value: "otlp"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "http/protobuf"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "https://o2.k3s.pybay.de/api/default"
+            - name: OTEL_EXPORTER_OTLP_HEADERS
+              valueFrom:
+                secretKeyRef: { name: otel-auth, key: authorization }
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "${OTEL_ATTRS}"
+            - name: CLAUDE_CODE_ENHANCED_TELEMETRY_BETA
+              value: "1"
+            - name: OTEL_LOG_USER_PROMPTS
+              value: "1"
+            - name: OTEL_LOG_TOOL_DETAILS
+              value: "1"
+            - name: OTEL_LOG_TOOL_CONTENT
+              value: "1"
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+          volumeMounts:
+            - name: agent-key
+              mountPath: /etc/agent-key
+              readOnly: true
+            - name: agent-prompt
+              mountPath: /etc/agent-prompt
+              readOnly: true
+      volumes:
+        - name: agent-key
+          secret:
+            secretName: ${AGENT_KEY_SECRET}
+            defaultMode: 0444       # non-root 'agent' liest, Entrypoint kopiert auf 600
+        - name: agent-prompt
+          configMap:
+            name: ${AGENT_PROMPT_CM}
+            defaultMode: 0444

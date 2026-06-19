@@ -1,0 +1,22 @@
+# Headless Service auf das Target-Pod dieses Laufs.
+# Von scripts/run.sh per envsubst gerendert. Zweck: der in-cluster laufende
+# Agent erreicht das Ziel ueber einen stabilen DNS-Namen
+# (${TARGET_SVC}.${NAMESPACE}.svc.cluster.local:22) -- KEIN port-forward,
+# damit der Laptop ganz aus dem Agentenpfad faellt. Reine Erreichbarkeit,
+# keine Sicherheitsgrenze (DZ2 traegt ueber Mount-Isolation, nicht ueber Netz).
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${TARGET_SVC}
+  namespace: ${NAMESPACE}
+  labels:
+    thesis.pybay.de/run-id: "${RUN_ID_LABEL}"
+    thesis.pybay.de/role: "target"
+spec:
+  clusterIP: None                 # headless: DNS zeigt direkt auf das Pod
+  selector:
+    thesis.pybay.de/run-id: "${RUN_ID_LABEL}"
+  ports:
+    - name: ssh
+      port: 22
+      targetPort: 22
