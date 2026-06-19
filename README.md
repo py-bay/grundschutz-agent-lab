@@ -1,71 +1,98 @@
 # grundschutz-agent-lab
 
-Reproduzierbarer Lab-Harness fuer die prototypische, agentische Pruefung
-von BSI-IT-Grundschutz-Anforderungen (SYS-Module). Teil der Bachelorarbeit
+Reproduzierbarer Lab-Harness fuer die agentische Pruefung von
+BSI-IT-Grundschutz-Anforderungen (SYS-Module). Teil der Bachelorarbeit
 `bachelor_thesis`, aber als eigenstaendiges, reproduzierbares Artefakt
-separat gehalten (Forgejo-gehostet, analog `homelab-gitops`).
+separat gehalten (Forgejo-gehostet).
 
-Es zieht je Lauf ein **ephemeres Ubuntu-SSH-Zielsystem** als k3s-Pod hoch,
-spielt einen definierten Referenzzustand ein, laesst einen Agenten
-(Claude Code) das System read-only per SSH pruefen, gleicht das Urteil
-gegen eine **pre-committed Ground Truth** ab und taggt die Telemetrie pro
-Lauf.
+Je Lauf zieht der Harness ein **ephemeres Ubuntu-SSH-Zielsystem** als
+k3s-Pod hoch, etabliert einen definierten Referenzzustand, laesst einen
+Agenten (Claude Code) das System **read-only per SSH** pruefen, gleicht das
+**dreiwertige** Urteil gegen eine **pre-committed Ground Truth** ab und taggt
+die Telemetrie pro Lauf.
 
-> **Status:** Demonstration/Smoke-Test (DSR-Schritt 5), noch nicht die
-> eigentliche Evaluation. Erste Anforderung: **SYS.1.3.A8** (Kategorie A,
-> SSH Zertifikat statt Passwort). Begruendung in
-> [`docs/methodology.md`](docs/methodology.md).
+> **Status (2026-06-16):** Schema **v2** (Coverage-Design). Maschinerie in
+> Pilot Stufe 2 validiert (dreiwertiges Urteil, generische Varianten,
+> szenario-eigener sudoers, Preflight-SSH, Agent-Isolation: 0 GT-Leakage).
+> Validierter B-Fall: `SYS.2.3.A1` (Zelle 4, korrekte Abstinenz). Der
+> A8-Durchstich (`SYS.1.3.A8`, Kategorie A) laeuft ueber einen Legacy-Zweig
+> unveraendert weiter. Architektur: [`docs/architektur.md`](docs/architektur.md).
 
-## Quickstart
+## Konzept in einem Satz
 
-Vollstaendiger Durchlauf inkl. der Variante **ohne Tunnel (auf dem k3s-Node
-per Web-Terminal)**: [`docs/runbook-durchspiel.md`](docs/runbook-durchspiel.md).
+Das **Labor** ist das Forschungsartefakt, der **KI-Agent** der Pruefgegenstand.
+Das Lab deckt den **Ergebnisraum** einer Pruefung ab (5 Szenario-Zellen:
+konform / nicht konform / nicht verifizierbar, je korrekt -- plus sichtbare,
+klassifizierbare Fehlerpfade). Begruendung: Thesis Kap. 3,
+[`docs/design-principles.md`](docs/design-principles.md).
 
-Voraussetzungen auf dem Betreiber-Laptop: `kubectl` mit gueltiger
-kubeconfig (ggf. SSH-Tunnel zum k3s-API), `envsubst`, `openssl`,
-`ssh-keygen`, sowie aktivierte Claude-Code-Telemetrie
-([`docs/telemetry.md`](docs/telemetry.md)). Auf dem Node laeuft stattdessen
-`k3s kubectl` (von den Scripts automatisch erkannt).
+## Quickstart (v2)
+
+Voraussetzungen am Operator-Host: `kubectl` mit gueltiger kubeconfig (ggf.
+SSH-Tunnel zum k3s-API), `envsubst`, `openssl`, `ssh-keygen`, `claude`
+(authentifiziert), Telemetrie ([`docs/telemetry.md`](docs/telemetry.md)).
 
 ```bash
-# 1) Konformes Zielsystem hochziehen
-scripts/run.sh SYS.1.3.A8-ssh-cert-vs-password compliant
-# -> druckt run.id, SSH-Zugang und das fertige `claude`-Kommando
-#    Mit --agent faehrt run.sh den Agenten gleich selbst und sichert den
-#    vollen Output unter runs/<run_id>/agent_output.json (+ transcript.jsonl):
-#    scripts/run.sh SYS.1.3.A8-ssh-cert-vs-password compliant --agent
+# Variante hochziehen, Agenten fahren, Output sichern (alles in einem):
+scripts/run.sh SYS.2.3.A1-sudo-config-rootonly locked --agent
+#   -> Pod + ConfigMap + Secret + pre-committed Manifest, Preflight-SSH,
+#      dann claude -p im isolierten CWD. Druckt run.id.
 
-# 2) Agent laufen lassen (Kommando aus der Ausgabe kopieren) ...
-
-# 3) Abraeumen + Urteil festhalten
-scripts/teardown.sh <run_id> --verdict konform --notes "sshd -T zeigte passwordauthentication no"
-
-# 4) Gegenprobe mit dem nicht-konformen Zustand
-scripts/run.sh SYS.1.3.A8-ssh-cert-vs-password non_compliant
-# ... Agent ... teardown mit --verdict nicht_konform
+# Urteil festhalten + abraeumen (dreiwertig):
+scripts/teardown.sh <run_id> --verdict nicht_verifizierbar --notes "..."
+#   -> passed = (verdict == expected_verdict der Variante)
 ```
 
-Ein Smoke-Test gilt als bestanden, wenn der Agent **beide** Varianten
-korrekt klassifiziert (`agent.passed=true` in beiden Manifesten).
+Adversarial-Paar je Traeger: eine Variante pro Soll-Urteil (z.B. `locked`
+-> `nicht_verifizierbar`, `readable` -> `konform`). Ein Item gilt als
+sauber, wenn alle Varianten ihr `expected_verdict` treffen.
+
+Vollstaendiger manueller Durchlauf (auch ohne Tunnel, auf dem Node):
+[`docs/runbook-durchspiel.md`](docs/runbook-durchspiel.md).
 
 ## Layout
 
 ```
-scenarios/<gruppe>/<id>/      fachliches Szenario je Anforderung
-  scenario.yaml               Schema (Anforderung, Kategorie, Operationalisierung)
-  ground_truth.md             pre-committed Referenz (gehasht je Lauf)
-  check-prompt.md             Agent-Prompt (ohne GT-Leak)
-  variants/<v>/sshd_config    konformer / nicht-konformer Zustand
-kubernetes/                   namespace + getemplatetes On-demand-Pod-Manifest
-images/ubuntu-sshd/           gepinntes Image fuer die echte Evaluation
-scripts/run.sh                Trigger: Pod hoch + Manifest + Port-Forward
-scripts/teardown.sh           Pod ab + Urteil ins Manifest
-runs/<run_id>/manifest.json   Lauf-Nachweis (auswertbar ueber Laeufe)
-docs/                         Methodik (DSR) + Telemetrie
+scenarios/<gruppe>/<id>/        fachliches Szenario je Anforderung
+  scenario.yaml                 Anforderung, category, cell, gewertete B-Saetze
+  ground_truth.md               pre-committed Referenz (gehasht je Lauf)
+  check-prompt.md               Agent-Prompt (dreiwertig, ohne GT-Leak)
+  sudoers                       read-only Kommando-Whitelist dieses Szenarios (DZ6)
+  variants/<v>/
+    variant.env                 EXPECTED_VERDICT (+ erwartete Fehlerklasse)
+    setup.sh                    etabliert den Zielzustand im Pod
+kubernetes/                     namespace + getemplatetes On-demand-Pod-Manifest
+images/ubuntu-sshd/             gepinntes Image fuer die echte Evaluation
+scripts/run.sh                  Pod hoch + Stage + Manifest + Preflight + Agent
+scripts/teardown.sh             Pod ab + dreiwertiges Urteil ins Manifest
+runs/<run_id>/                  Lauf-Nachweis: manifest.json, agent_output.json,
+                                transcript.jsonl, stage/, ggf. FINDING.md
+docs/                           architektur, design-principles, scenario-schema-v2,
+                                runbook, telemetry
 ```
+
+Legacy-Szenarien mit nur `variants/<v>/sshd_config` (A8-Durchstich) laufen
+ueber einen Abwaertskompatibilitaets-Zweig in `run.sh` weiter.
+
+## Schema v1 -> v2
+
+Generalisierung vom A-Durchstich aufs Coverage-Design: dreiwertiges Urteil,
+Variante = inszenierter Zielzustand via `setup.sh`, read-only Whitelist pro
+Szenario. Details: [`docs/scenario-schema-v2.md`](docs/scenario-schema-v2.md).
 
 ## Design in einem Satz
 
 On-demand & imperativ (nicht ArgoCD, weil Reconcile gegen ephemere Pods
-arbeitet); Ground-Truth-Pre-Commitment per Hash gegen das Test-Oracle-
-Problem; Telemetrie pro Lauf ueber `run.id` mit OpenObserve verknuepft.
+arbeitet); Ground-Truth-Pre-Commitment per Hash gegen das Test-Oracle-Problem;
+Agent isoliert ohne GT-Zugriff; Telemetrie pro Lauf ueber `run.id` mit
+OpenObserve verknuepft.
+
+## Bezug zu den Repos
+
+| Repo | Rolle |
+|------|-------|
+| `grundschutz-agent-lab` (dieses) | Lab: Szenarien, On-demand-Trigger, Run-Manifeste, Architektur |
+| `bsi-grundschutz-classification` | Klassifikation/Auswertung + **Carrier-Selektion** (`data/lab_sample/`) |
+| `bsi-grundschutz-parser` | Extraktion der Anforderungen (Anhang A) |
+| `bachelor_thesis` | Text + massgebliche Methodik (Kap. 3) |
+| `homelab` / `homelab-gitops` | k3s-Substrat / ArgoCD-Workloads (u.a. OpenObserve) |
