@@ -11,12 +11,16 @@ Agenten (Claude Code) das System **read-only per SSH** pruefen, gleicht das
 **dreiwertige** Urteil gegen eine **pre-committed Ground Truth** ab und taggt
 die Telemetrie pro Lauf.
 
-> **Status (2026-06-16):** Schema **v2** (Coverage-Design). Maschinerie in
-> Pilot Stufe 2 validiert (dreiwertiges Urteil, generische Varianten,
-> szenario-eigener sudoers, Preflight-SSH, Agent-Isolation: 0 GT-Leakage).
-> Validierter B-Fall: `SYS.2.3.A1` (Zelle 4, korrekte Abstinenz). Der
-> A8-Durchstich (`SYS.1.3.A8`, Kategorie A) laeuft ueber einen Legacy-Zweig
-> unveraendert weiter. Architektur: [`docs/architektur.md`](docs/architektur.md).
+> **Status (2026-06-19):** Schema **v2** (Coverage-Design). Maschinerie
+> validiert -- **Agent laeuft in-cluster als k8s-Job, laptop-frei**
+> (dreiwertiges Urteil, generische Varianten, szenario-/variant-eigener sudoers,
+> Preflight-SSH, Agent-Isolation via Dateisystem/Mount: 0 GT-Leakage). Sauber
+> validiert: `SYS.2.3.A1` Variante `readable` -> `konform`. **Befund:** A1
+> diskriminiert nicht ueber die Lesbarkeit (sichtbarer sudo+Logging-Kern via
+> `sudo -l`) und ist damit ein **Zelle-1-Traeger, kein Zelle-4-Traeger** (siehe
+> `FINDING.md` im jeweiligen `runs/`-Verzeichnis). Der A8-Durchstich
+> (`SYS.1.3.A8`, Kategorie A) laeuft ueber einen Legacy-Zweig weiter.
+> Architektur: [`docs/architektur.md`](docs/architektur.md).
 
 ## Konzept in einem Satz
 
@@ -26,22 +30,28 @@ konform / nicht konform / nicht verifizierbar, je korrekt -- plus sichtbare,
 klassifizierbare Fehlerpfade). Begruendung: Thesis Kap. 3,
 [`docs/design-principles.md`](docs/design-principles.md).
 
-## Quickstart (v2)
+## Quickstart (v2, Agent in-cluster)
 
-Voraussetzungen am Operator-Host: `kubectl` mit gueltiger kubeconfig (ggf.
-SSH-Tunnel zum k3s-API), `envsubst`, `openssl`, `ssh-keygen`, `claude`
-(authentifiziert), Telemetrie ([`docs/telemetry.md`](docs/telemetry.md)).
+Voraussetzungen: `kubectl` mit gueltiger kubeconfig (Operator kann auf einem
+Node laufen, **kein Laptop noetig**), `envsubst`, `openssl`, `ssh-keygen`.
+Einmal im Namespace `grundschutz-lab` anzulegen: Secrets `claude-oauth`
+(OAuth-Token aus `claude setup-token`), `otel-auth` (OTel-Header,
+[`docs/telemetry.md`](docs/telemetry.md)), `forgejo-pull` (Registry-Pull).
+Agent-Image aus `images/claude-code/` bauen und in die Forgejo-Registry pushen.
 
 ```bash
-# Variante hochziehen, Agenten fahren, Output sichern (alles in einem):
-scripts/run.sh SYS.2.3.A1-sudo-config-rootonly locked --agent
-#   -> Pod + ConfigMap + Secret + pre-committed Manifest, Preflight-SSH,
-#      dann claude -p im isolierten CWD. Druckt run.id.
+# Variante hochziehen, Agenten als k8s-Job IN-CLUSTER fahren, Output sichern:
+scripts/run.sh SYS.2.3.A1-sudo-config-rootonly readable --agent-incluster
+#   -> Pod + ConfigMap + Secret + Service + pre-committed Manifest, Preflight-SSH,
+#      dann claude als Job im Cluster (kein Repo-/GT-Mount). Druckt run.id.
 
 # Urteil festhalten + abraeumen (dreiwertig):
-scripts/teardown.sh <run_id> --verdict nicht_verifizierbar --notes "..."
+scripts/teardown.sh <run_id> --verdict konform --notes "..."
 #   -> passed = (verdict == expected_verdict der Variante)
 ```
+
+`--agent` statt `--agent-incluster` faehrt `claude` als **Dev-Fallback lokal**
+auf dem Operator (isoliertes `/tmp`-CWD), ohne Image/Secrets.
 
 Adversarial-Paar je Traeger: eine Variante pro Soll-Urteil (z.B. `locked`
 -> `nicht_verifizierbar`, `readable` -> `konform`). Ein Item gilt als
