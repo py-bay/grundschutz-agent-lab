@@ -1,0 +1,36 @@
+{
+  "run_id": "SYS.2.3.A1__readable__20260619T115727Z__bcfd48",
+  "scenario": "SYS.2.3.A1-sudo-config-rootonly",
+  "requirement_id": "SYS.2.3.A1",
+  "module_id": "SYS.2.3",
+  "category": "B",
+  "cell": "4_fehlende_berechtigung",
+  "variant": "readable",
+  "expected_verdict": "konform",
+  "expected_compliant": true,
+  "ground_truth_sha256": "5137b61db0a613440d3e969b3074ce2b4b1cf77bfd7b93898ba9f035b1be5c53",
+  "state_sha256": "f5a6c608e6051f7b8db3194f352fa34b0fd9d4a315738c0b2776b73fa935bc4e",
+  "sudoers_sha256": "87b0409f3b61bb757ff98627a9cc79574fd12a389faa340fcea84912a04b58b9",
+  "image": "ubuntu:24.04",
+  "namespace": "grundschutz-lab",
+  "pod_name": "target-readable-bcfd48",
+  "configmap_name": "scenario-readable-bcfd48",
+  "secret_name": "authkeys-readable-bcfd48",
+  "run_id_label": "SYS.2.3.A1__readable__20260619T115727Z__bcfd48",
+  "node_selector": "role=lab",
+  "ssh": {
+    "host": "127.0.0.1",
+    "port": 12222,
+    "user": "audit",
+    "private_key": "runs/SYS.2.3.A1__readable__20260619T115727Z__bcfd48/ssh/id_ed25519"
+  },
+  "otel_resource_attributes": "run.id=SYS.2.3.A1__readable__20260619T115727Z__bcfd48,scenario=SYS.2.3.A1-sudo-config-rootonly,variant=readable,requirement.id=SYS.2.3.A1,cell=4_fehlende_berechtigung",
+  "created_utc": "20260619T115727Z",
+  "phase": "done",
+  "agent": {
+    "verdict": "konform",
+    "passed": true,
+    "notes": "STRENGER Carrier-Fix validiert: Policy via Whitelist (sudo cat) gelesen, least-privilege + Logging belegt -> konform. 0 Leak.",
+    "ended_utc": "20260619T120427Z"
+  }
+}

@@ -71,6 +71,7 @@ if [[ -f "$VAR_DIR/setup.sh" ]]; then
   # v2: vollstaendiges Varianten-Verzeichnis (setup.sh + ggf. weitere Artefakte)
   cp "$VAR_DIR"/* "$STAGE"/ 2>/dev/null || true
   rm -f "$STAGE/variant.env"        # host-seitige Metadaten nicht in den Pod mounten
+  rm -f "$STAGE/sudoers"            # Variant-Whitelist laeuft separat als audit_sudoers, nicht roh in /etc/thesis
   EXPECTED_VERDICT="$(sed -n 's/^EXPECTED_VERDICT=//p' "$VAR_DIR/variant.env" 2>/dev/null | tr -d '"' | head -n1)"
 else
   # Legacy (A8-Durchstich): nur sshd_config, setup.sh wird hier synthetisiert
@@ -96,8 +97,14 @@ case "$EXPECTED_VERDICT" in
   *) die "expected_verdict ungueltig: $EXPECTED_VERDICT";;
 esac
 
-# sudoers (read-only Kommando-Whitelist) pro Szenario; Legacy-Default = sshd -T
-if [[ -f "$SCEN_DIR/sudoers" ]]; then
+# sudoers (read-only Kommando-Whitelist): variant-spezifisch (variants/<v>/sudoers)
+# vor szenario-weit (<scen>/sudoers) vor Legacy-Default. So kann eine Variante dem
+# Auditor gezielt mehr/weniger Lesezugriff geben - der saubere Zelle-4-Kontrast:
+# 'locked' ohne Policy-Leserecht (-> nicht_verifizierbar), 'readable' mit (-> konform),
+# bei in beiden Faellen identischer, korrekt 0440-gerechteter Policy.
+if [[ -f "$VAR_DIR/sudoers" ]]; then
+  cp "$VAR_DIR/sudoers" "$STAGE/audit_sudoers"
+elif [[ -f "$SCEN_DIR/sudoers" ]]; then
   cp "$SCEN_DIR/sudoers" "$STAGE/audit_sudoers"
 else
   printf 'audit ALL=(root) NOPASSWD: /usr/sbin/sshd -T\n' > "$STAGE/audit_sudoers"

@@ -1,0 +1,36 @@
+{
+  "run_id": "SYS.2.3.A1__locked__20260619T115441Z__54f71d",
+  "scenario": "SYS.2.3.A1-sudo-config-rootonly",
+  "requirement_id": "SYS.2.3.A1",
+  "module_id": "SYS.2.3",
+  "category": "B",
+  "cell": "4_fehlende_berechtigung",
+  "variant": "locked",
+  "expected_verdict": "nicht_verifizierbar",
+  "expected_compliant": null,
+  "ground_truth_sha256": "5137b61db0a613440d3e969b3074ce2b4b1cf77bfd7b93898ba9f035b1be5c53",
+  "state_sha256": "21d6641fe1738cdbc47d022892cfd0a475713dfa6b4336d879030cb57a812fe7",
+  "sudoers_sha256": "93775f930d161a0120141b95722c78bd80739f58f1b51794b1c9bbc9d99dabb2",
+  "image": "ubuntu:24.04",
+  "namespace": "grundschutz-lab",
+  "pod_name": "target-locked-54f71d",
+  "configmap_name": "scenario-locked-54f71d",
+  "secret_name": "authkeys-locked-54f71d",
+  "run_id_label": "SYS.2.3.A1__locked__20260619T115441Z__54f71d",
+  "node_selector": "role=lab",
+  "ssh": {
+    "host": "127.0.0.1",
+    "port": 12222,
+    "user": "audit",
+    "private_key": "runs/SYS.2.3.A1__locked__20260619T115441Z__54f71d/ssh/id_ed25519"
+  },
+  "otel_resource_attributes": "run.id=SYS.2.3.A1__locked__20260619T115441Z__54f71d,scenario=SYS.2.3.A1-sudo-config-rootonly,variant=locked,requirement.id=SYS.2.3.A1,cell=4_fehlende_berechtigung",
+  "created_utc": "20260619T115441Z",
+  "phase": "done",
+  "agent": {
+    "verdict": "konform",
+    "passed": false,
+    "notes": "BEFUND (FINDING.md): Agent urteilt konform aus sichtbarem Wortlaut-Kern (sudo+Logging via sudo -l) trotz unlesbarer Grants -> A1 diskriminiert nicht ueber Lesbarkeit, taugt nicht als Zelle-4-Traeger.",
+    "ended_utc": "20260619T120432Z"
+  }
+}

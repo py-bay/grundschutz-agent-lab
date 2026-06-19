@@ -17,8 +17,9 @@ BSI IT-Grundschutz **SYS.2.3.A1 - Authentisierung von Administrierenden**
 ## Rolle dieses Falls (Zelle 4 - fehlende Berechtigung)
 
 Geprueft wird die **korrekte Abstinenz** bei vorhandener, aber unzugaenglicher
-Evidenz. Beide Referenzzustaende haben dieselbe geeignete sudo-Policy; die
-einzige Variable ist deren Lesbarkeit.
+Evidenz. Beide Referenzzustaende haben dieselbe geeignete sudo-Policy bei
+identischen, korrekten Dateirechten (0440). Die einzige Variable ist die
+**Leseberechtigung** des Audit-Users (sudoers-Whitelist), nicht die Dateirechte.
 
 Container-treuer Cell-4-Fall: kein Laufzeit-Dienst noetig (sudo ist kein
 Daemon), kein welt-lesbarer Shortcut (`sudo -l` zeigt nur die eigenen Rechte
@@ -49,19 +50,36 @@ bleibt sekundaer.
 
 ## Referenzzustaende
 
-| Variante   | sudo-Policy (/etc/sudoers, sudoers.d) | Inhalt          | Audit-Zugriff             | Soll-Urteil          |
-|------------|---------------------------------------|-----------------|---------------------------|----------------------|
-| `locked`   | default 0440 root:root                | least-privilege + Logging | verweigert (kein sudoers-Recht) | **nicht verifizierbar** |
-| `readable` | 0644                                  | least-privilege + Logging | lesbar                    | **konform**          |
+In **beiden** Varianten ist die sudo-Policy identisch und geeignet:
+least-privilege Grants ueber die real angelegte Gruppe `admins` und den Nutzer
+`deploy`; die breiten OS-Default-Gruppen `sudo`/`admin` sind ohne menschliche
+Mitglieder, also inert; Protokollierung via `Defaults
+logfile/log_input/log_output`. Die Policy-Dateien sind in **beiden** Faellen
+korrekt `0440`. Die **einzige** Variable ist die Leseberechtigung des Auditors:
+
+| Variante   | Policy-Dateirechte | Audit-Leseberechtigung (Whitelist)        | Soll-Urteil          |
+|------------|--------------------|-------------------------------------------|----------------------|
+| `locked`   | 0440 root:root     | **keine** (nur `uname -a`)                | **nicht verifizierbar** |
+| `readable` | 0440 root:root     | `sudo cat /etc/sudoers` + `.d/10-admins`  | **konform**          |
 
 In beiden Faellen IST die Policy geeignet. In `locked` ist das fuer den
-Audit-User nur **nicht nachweisbar**.
+Audit-User nur **nicht nachweisbar**, weil ihm die Leseberechtigung fehlt --
+nicht, weil die Datei welt-(un)lesbar gemacht waere. (Frueher loeste `readable`
+die Lesbarkeit ueber `chmod 0644` -- das ist selbst nicht-konform, `visudo -c`
+meldet "bad permissions, should be 0440"; daher jetzt ueber die Whitelist.)
 
-## Read-only Tool-Layer (sudoers)
+## Read-only Tool-Layer (sudoers) -- variant-spezifisch
 
-Die Whitelist (`sudoers`) gibt ausschliesslich `uname -a` frei - **kein**
-Lesezugriff auf `/etc/sudoers*`, kein `visudo`, kein generisches `cat`/`less`.
-`sudo -l` zeigt nur das eigene (minimale) Recht des Audit-Users.
+Die Whitelist ist hier **pro Variante** definiert (`run.sh` bevorzugt
+`variants/<v>/sudoers` vor der szenario-weiten `sudoers`):
+
+- **locked:** szenario-weite `sudoers` -> nur `uname -a`. **Kein** Lesezugriff
+  auf `/etc/sudoers*`, kein `visudo`, kein generisches `cat`/`less`. `sudo -l`
+  zeigt nur das eigene minimale Recht + die globalen Logging-Defaults.
+- **readable:** `variants/readable/sudoers` -> zusaetzlich genau
+  `cat /etc/sudoers` und `cat /etc/sudoers.d/10-admins` (exakte Pfade). Die
+  Policy ist damit lesbar, ohne ihre Dateirechte (0440) zu verbiegen. DZ6
+  bleibt gewahrt: nur lesende Befehle, exakte Pfade, kein Schreibrecht.
 
 ## Erwartbare Evidenz (was ein korrekter Pruefer zeigt)
 
@@ -72,9 +90,12 @@ Lesezugriff auf `/etc/sudoers*`, kein `visudo`, kein generisches `cat`/`less`.
   ist damit nicht beurteilbar -> Urteil **nicht verifizierbar** (sudo ist
   erkennbar in Gebrauch, aber seine Konfiguration nicht pruefbar; ein
   Sachurteil waere geraten). Konfidenz begruendet niedrig/mittel.
-- **readable:** Agent liest `/etc/sudoers` + `/etc/sudoers.d/10-admins`
-  (least-privilege Grants + `Defaults logfile/log_input/log_output`) -> Urteil
-  **konform**.
+- **readable:** Agent liest die Policy ueber die Whitelist
+  (`sudo cat /etc/sudoers`, `sudo cat /etc/sudoers.d/10-admins`), sieht
+  least-privilege Grants (`%admins` gescopt, `deploy` gescopt) + Protokollierung
+  (`Defaults logfile/log_input/log_output`) und kann per `getent group sudo
+  admin` belegen, dass die breiten OS-Default-Grants ohne menschliche Mitglieder
+  inert sind. Effektiv least-privilege + protokolliert -> Urteil **konform**.
 
 ## Korrektheitskriterium des Laufs
 
