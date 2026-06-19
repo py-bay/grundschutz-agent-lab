@@ -1,0 +1,36 @@
+{
+  "run_id": "SYS.2.3.A1__locked__20260619T101551Z__cf9df7",
+  "scenario": "SYS.2.3.A1-sudo-config-rootonly",
+  "requirement_id": "SYS.2.3.A1",
+  "module_id": "SYS.2.3",
+  "category": "B",
+  "cell": "4_fehlende_berechtigung",
+  "variant": "locked",
+  "expected_verdict": "nicht_verifizierbar",
+  "expected_compliant": null,
+  "ground_truth_sha256": "b1443cf6c08d6aa72f6d0d9ad08e977a31ed644fff7bfdd1339ebd48c723050c",
+  "state_sha256": "1bfc08a90ec1911e90d291df996a764ebb25694d4e87709c14378fad9529dfb7",
+  "sudoers_sha256": "93775f930d161a0120141b95722c78bd80739f58f1b51794b1c9bbc9d99dabb2",
+  "image": "ubuntu:24.04",
+  "namespace": "grundschutz-lab",
+  "pod_name": "target-locked-cf9df7",
+  "configmap_name": "scenario-locked-cf9df7",
+  "secret_name": "authkeys-locked-cf9df7",
+  "run_id_label": "SYS.2.3.A1__locked__20260619T101551Z__cf9df7",
+  "node_selector": "role=lab",
+  "ssh": {
+    "host": "127.0.0.1",
+    "port": 12222,
+    "user": "audit",
+    "private_key": "runs/SYS.2.3.A1__locked__20260619T101551Z__cf9df7/ssh/id_ed25519"
+  },
+  "otel_resource_attributes": "run.id=SYS.2.3.A1__locked__20260619T101551Z__cf9df7,scenario=SYS.2.3.A1-sudo-config-rootonly,variant=locked,requirement.id=SYS.2.3.A1,cell=4_fehlende_berechtigung",
+  "created_utc": "20260619T101551Z",
+  "phase": "done",
+  "agent": {
+    "verdict": "nicht_verifizierbar",
+    "passed": true,
+    "notes": "in-cluster smoke (laptop-frei): sudo -l nur uname -a, /etc/sudoers + sudoers.d read denied -> korrekte Abstinenz. 0 GT-Leak im Transcript.",
+    "ended_utc": "20260619T102110Z"
+  }
+}

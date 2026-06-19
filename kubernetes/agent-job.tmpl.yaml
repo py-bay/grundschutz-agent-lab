@@ -28,6 +28,9 @@ spec:
     spec:
       restartPolicy: Never
       automountServiceAccountToken: false
+      # privates Forgejo-Registry-Paket -> Pull-Credentials (einmalig im NS angelegt).
+      imagePullSecrets:
+        - name: forgejo-pull
       nodeSelector:
         role: lab
       tolerations:
@@ -38,6 +41,11 @@ spec:
       containers:
         - name: agent
           image: ${AGENT_IMAGE}
+          # IfNotPresent: das Image wird in die containerd der Lab-Node
+          # importiert (kubernetes/load-image.sh). Bei :latest waere der
+          # Default 'Always' und wuerde trotz lokalem Image die Registry
+          # anfragen -- die ist fuer grosse Blobs unzuverlaessig.
+          imagePullPolicy: IfNotPresent
           env:
             - name: CLAUDE_CODE_OAUTH_TOKEN
               valueFrom:

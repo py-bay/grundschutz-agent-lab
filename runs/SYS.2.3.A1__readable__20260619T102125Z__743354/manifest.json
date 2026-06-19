@@ -1,0 +1,36 @@
+{
+  "run_id": "SYS.2.3.A1__readable__20260619T102125Z__743354",
+  "scenario": "SYS.2.3.A1-sudo-config-rootonly",
+  "requirement_id": "SYS.2.3.A1",
+  "module_id": "SYS.2.3",
+  "category": "B",
+  "cell": "4_fehlende_berechtigung",
+  "variant": "readable",
+  "expected_verdict": "konform",
+  "expected_compliant": true,
+  "ground_truth_sha256": "b1443cf6c08d6aa72f6d0d9ad08e977a31ed644fff7bfdd1339ebd48c723050c",
+  "state_sha256": "44f1a2d2bc9a2db01db6e4bdae7924b488377835147ad79ee7fd2323144d7b42",
+  "sudoers_sha256": "93775f930d161a0120141b95722c78bd80739f58f1b51794b1c9bbc9d99dabb2",
+  "image": "ubuntu:24.04",
+  "namespace": "grundschutz-lab",
+  "pod_name": "target-readable-743354",
+  "configmap_name": "scenario-readable-743354",
+  "secret_name": "authkeys-readable-743354",
+  "run_id_label": "SYS.2.3.A1__readable__20260619T102125Z__743354",
+  "node_selector": "role=lab",
+  "ssh": {
+    "host": "127.0.0.1",
+    "port": 12222,
+    "user": "audit",
+    "private_key": "runs/SYS.2.3.A1__readable__20260619T102125Z__743354/ssh/id_ed25519"
+  },
+  "otel_resource_attributes": "run.id=SYS.2.3.A1__readable__20260619T102125Z__743354,scenario=SYS.2.3.A1-sudo-config-rootonly,variant=readable,requirement.id=SYS.2.3.A1,cell=4_fehlende_berechtigung",
+  "created_utc": "20260619T102125Z",
+  "phase": "done",
+  "agent": {
+    "verdict": "nicht_konform",
+    "passed": false,
+    "notes": "CARRIER-BUG, kein Agentenfehler: visudo -c meldet 0644 als bad permissions, tote Referenzen (%sysadmin/deploy), pauschales %sysadmin ALL. Siehe FINDING.md. readable->konform neu zu konstruieren.",
+    "ended_utc": "20260619T102810Z"
+  }
+}

@@ -3,9 +3,14 @@
 # Nachweis und wird NICHT ignoriert.
 runs/*/ssh/
 runs/*/pod.yaml
+runs/*/agent-job.yaml
+runs/*/target-service.yaml
+runs/*/agent-prompt.md
 runs/*/portforward.pid
 runs/*/portforward.log
 runs/*/agent_stderr.log
+runs/*/agent_job.log
 !runs/.gitkeep
 # Bewusst NICHT ignoriert (= versionierter Forschungs-Record):
-#   runs/*/manifest.json, runs/*/agent_output.json, runs/*/transcript.jsonl
+#   runs/*/manifest.json, runs/*/agent_output.json, runs/*/transcript.jsonl,
+#   runs/*/FINDING.md

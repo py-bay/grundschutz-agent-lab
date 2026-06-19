@@ -1,0 +1,10 @@
+# Read-only Audit-Whitelist fuer SYS.2.3.A1 (Zelle 4 - fehlende Berechtigung).
+#
+# Bewusst minimal: nur ein harmloser Lesebefehl, KEIN Lesezugriff auf die
+# sudo-Policy (/etc/sudoers*), kein visudo, kein generisches cat/less.
+# `sudo -l` zeigt dem Audit-User nur dieses eine eigene Recht, nicht die
+# Gesamt-Policy. In Variante 'locked' bleibt die Policy damit unzugaenglich
+# -> korrektes Urteil ist 'nicht verifizierbar'.
+#
+# DZ6: ausschliesslich lesende Operationen, keine schreibenden Befehle.
+audit ALL=(root) NOPASSWD: /usr/bin/uname -a
