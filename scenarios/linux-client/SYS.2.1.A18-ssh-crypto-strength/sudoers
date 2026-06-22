@@ -1,0 +1,9 @@
+# Read-only Audit-Whitelist fuer SYS.2.1.A18 (Sachurteil, Ergebnisklassen 1/2).
+#
+# Nur die effektive SSH-Konfiguration lesen. `sshd -T` rendert die wirksame
+# Konfiguration inkl. Defaults/Includes (massgeblicher als das rohe sshd_config).
+# Kein Schreib-/Neustart-/Installationsrecht.
+#
+# DZ6: ausschliesslich lesende Operationen. Beide Varianten nutzen diese
+# Whitelist (die Variable ist die Krypto-Suite, nicht die Lesbarkeit).
+audit ALL=(root) NOPASSWD: /usr/sbin/sshd -T

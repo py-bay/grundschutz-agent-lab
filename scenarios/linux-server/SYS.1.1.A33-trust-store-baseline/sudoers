@@ -1,0 +1,8 @@
+# Read-only Audit-Whitelist fuer SYS.1.1.A33 (Ergebnisklasse 3 - Mehrquellen-Synthese).
+#
+# Die Zertifikatsspeicher (/etc/ssl/certs, /usr/local/share/ca-certificates,
+# /usr/share/ca-certificates) sind welt-lesbar; privilegiert noetig ist hoechstens
+# die Paketintegritaets-Pruefung. KEIN update-ca-certificates (das waere schreibend).
+#
+# DZ6: ausschliesslich lesende Operationen.
+audit ALL=(root) NOPASSWD: /usr/bin/dpkg -V ca-certificates

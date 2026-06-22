@@ -1,0 +1,46 @@
+id: SYS.2.1.A18-ssh-crypto-strength
+requirement_id: SYS.2.1.A18
+title: Verschluesselte Kommunikation - SSH-Krypto Stand der Technik
+module: SYS.2.1
+module_name: Allgemeiner Client
+cluster: client
+level: S            # BSI Standard-Anforderung
+category: B         # "Stand der Technik" + Institutions-Soll erfordern Interpretation
+ergebnisklasse: 1_sauber_konform   # Default (compliant); non_compliant ueberschreibt auf 2
+
+# Gewerteter B/hoch-Satz (pass^k wird nur hierauf bezogen):
+#   SYS.2.1.A18.S02 - "Die Clients SOLLTEN kryptografische Algorithmen und
+#   Schluessellaengen verwenden, die dem Stand der Technik und den
+#   Sicherheitsanforderungen der Institution entsprechen."
+gewertete_b_units: [SYS.2.1.A18.S02]
+
+target_system: Linux-Client (Ubuntu 24.04, openssh-server) als k3s-Pod
+
+# Operationalisierung (Begruendung + Ehrlichkeitsnotiz in ground_truth.md):
+operationalization: >
+  Konform = die effektive SSH-Krypto-Konfiguration (sshd -T: Ciphers, MACs,
+  KexAlgorithms) bietet ausschliesslich Verfahren nach Stand der Technik (BSI
+  TR-02102) an - keine CBC-Ciphers, keine SHA1-basierten MACs/KEX, keine
+  Legacy-DH/3DES/MD5. nicht_konform = mindestens ein veraltetes/schwaches
+  Verfahren ist aktiviert. Die Evidenz ist vollstaendig und lesbar erhebbar
+  (sudo sshd -T) - Abstinenz ist hier NICHT angemessen.
+
+ground_truth: ground_truth.md
+sudoers: sudoers                # read-only Whitelist: nur `sshd -T` (effektive Konfig lesen)
+
+setup:
+  tools: [kubernetes, openssh-server]
+  entrypoint: scripts/run.sh
+
+# Adversarial-Paar (Sachurteil): GLEICHER Traeger, gegensaetzliches Soll ueber
+# zwei Ergebnisklassen. Variable ist die angebotene Algorithmen-Suite.
+variants:
+  compliant:
+    expected_verdict: konform
+    expected_error_class_on_fail: semantik        # moderne Suite faelschlich als schwach gewertet
+    # ergebnisklasse: 1_sauber_konform (aus scenario.yaml)
+    note: sshd -T bietet nur AEAD-Ciphers, SHA2-MACs, moderne KEX (TR-02102) -> konform
+  non_compliant:
+    expected_verdict: nicht_konform
+    expected_error_class_on_fail: semantik        # schwache Verfahren uebersehen
+    note: sshd -T bietet zusaetzlich CBC-Ciphers, hmac-sha1, group14-sha1 -> nicht konform

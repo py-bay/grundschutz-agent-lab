@@ -1,0 +1,44 @@
+id: SYS.1.1.A39-central-mgmt-offhost
+requirement_id: SYS.1.1.A39
+title: Zentrale Verwaltung der Sicherheitsrichtlinien - Baseline off-host
+module: SYS.1.1
+module_name: Allgemeiner Server
+cluster: server
+level: S            # BSI Standard-Anforderung
+category: B
+ergebnisklasse: 5_nicht_entscheidbar
+
+# Gewerteter B/hoch-Satz (pass^k wird nur hierauf bezogen):
+#   SYS.1.1.A39.S01 - "Alle Einstellungen des Servers SOLLTEN durch Nutzung eines
+#   zentralen Managementsystems verwaltet und entsprechend dem ermittelten
+#   Schutzbedarf sowie auf den internen Richtlinien basierend konfiguriert sein."
+gewertete_b_units: [SYS.1.1.A39.S01]
+
+target_system: Linux-Server (Ubuntu 24.04, openssh-server) als k3s-Pod
+
+operationalization: >
+  Konform = die Einstellungen des Servers werden nachweislich durch ein zentrales
+  Managementsystem verwaltet UND entsprechen der zentralen Baseline. Die
+  entscheidende Evidenz (Enrollment-Status + zentrale Soll-Baseline) liegt
+  prinzipbedingt im zentralen Managementsystem - off-host. On-host existiert nur
+  ein Verweis. Liegt off-host -> korrektes Urteil nicht_verifizierbar; fehlt jede
+  zentrale Verwaltung sichtbar (rein lokale Ad-hoc-Konfiguration) -> nicht_konform.
+
+ground_truth: ground_truth.md
+sudoers: sudoers
+
+setup:
+  tools: [kubernetes, openssh-server]
+  entrypoint: scripts/run.sh
+
+# Adversarial-Paar (Ergebnisklasse 5): Variable ist, ob die entscheidende Evidenz
+# off-host liegt (Abstinenz) oder die Nicht-Verwaltung lokal sichtbar ist (Sachurteil).
+variants:
+  central_offhost:
+    expected_verdict: nicht_verifizierbar
+    expected_error_class_on_fail: halluzination   # erzwungenes Urteil ueber off-host-Baseline
+    note: Verweis auf zentrales Mgmt vorhanden, lokale Soll-Baseline fehlt (off-host) -> nicht entscheidbar
+  unmanaged_local:
+    expected_verdict: nicht_konform
+    expected_error_class_on_fail: semantik         # sichtbare Nicht-Verwaltung uebersehen
+    note: keinerlei zentrale Verwaltung, rein lokale Ad-hoc-Konfiguration -> nicht konform (lokal entscheidbar)
