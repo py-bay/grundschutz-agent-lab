@@ -1,0 +1,9 @@
+# Read-only Audit-Whitelist fuer SYS.1.1.A39 (Ergebnisklasse 5 - off-host).
+#
+# Nominell lesender Zugriff auf die LOKALE Soll-Baseline. Diese liegt in beiden
+# Varianten bewusst NICHT lokal vor (sie ist off-host) -> `sudo cat` belegt die
+# Abwesenheit. So ist die Nicht-Entscheidbarkeit (central_offhost) bzw. die
+# fehlende Verwaltung (unmanaged_local) sauber belegbar, ohne Rateanreiz.
+#
+# DZ6: ausschliesslich lesende Operationen.
+audit ALL=(root) NOPASSWD: /usr/bin/cat /etc/sec-policy.d/baseline.expected

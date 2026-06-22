@@ -73,6 +73,11 @@ if [[ -f "$VAR_DIR/setup.sh" ]]; then
   rm -f "$STAGE/variant.env"        # host-seitige Metadaten nicht in den Pod mounten
   rm -f "$STAGE/sudoers"            # Variant-Whitelist laeuft separat als audit_sudoers, nicht roh in /etc/thesis
   EXPECTED_VERDICT="$(sed -n 's/^EXPECTED_VERDICT=//p' "$VAR_DIR/variant.env" 2>/dev/null | tr -d '"' | head -n1)"
+  # Optional: Variante darf die szenario-weite Ergebnisklasse ueberschreiben
+  # (Sachurteil-Paare, z.B. SYS.2.1.A18: compliant=1_sauber_konform,
+  # non_compliant=2_sauber_nicht_konform). Ohne Eintrag bleibt die scenario.yaml.
+  EK_OVERRIDE="$(sed -n 's/^EXPECTED_ERGEBNISKLASSE=//p' "$VAR_DIR/variant.env" 2>/dev/null | tr -d '"' | head -n1)"
+  [[ -n "$EK_OVERRIDE" ]] && ERGEBNISKLASSE="$EK_OVERRIDE"
 else
   # Legacy (A8-Durchstich): nur sshd_config, setup.sh wird hier synthetisiert
   [[ -f "$VAR_DIR/sshd_config" ]] || die "weder setup.sh noch sshd_config in $VAR_DIR"

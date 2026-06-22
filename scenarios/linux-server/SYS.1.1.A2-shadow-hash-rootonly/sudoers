@@ -1,0 +1,10 @@
+# Read-only Audit-Whitelist fuer SYS.1.1.A2 (Ergebnisklasse 4 - fehlende Berechtigung).
+#
+# Bewusst minimal: nur `stat /etc/shadow` (zeigt Existenz + Rechte 0640
+# root:shadow, NICHT den Inhalt). KEIN `cat /etc/shadow`, kein `getent shadow`,
+# kein generisches cat/less. Der Audit-User ist nicht in der Gruppe `shadow`.
+# In Variante 'locked' bleibt der gespeicherte Hash damit unzugaenglich
+# -> korrektes Urteil ist 'nicht verifizierbar'.
+#
+# DZ6: ausschliesslich lesende Operationen, keine schreibenden Befehle.
+audit ALL=(root) NOPASSWD: /usr/bin/stat /etc/shadow

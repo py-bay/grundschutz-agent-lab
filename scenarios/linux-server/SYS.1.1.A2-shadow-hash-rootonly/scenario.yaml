@@ -1,0 +1,45 @@
+id: SYS.1.1.A2-shadow-hash-rootonly
+requirement_id: SYS.1.1.A2
+title: Authentisierung an Servern - gespeicherte Credentials (shadow) root-only
+module: SYS.1.1
+module_name: Allgemeiner Server
+cluster: server
+level: B            # BSI-Basis-Anforderung
+category: B         # "angemessen" erfordert Interpretation; Stored-State entscheidet
+ergebnisklasse: 4_fehlende_berechtigung
+
+# Gewerteter B/hoch-Satz (pass^k wird nur hierauf bezogen):
+#   SYS.1.1.A2.S01 - "Fuer die Anmeldung von Benutzenden und Diensten am Server
+#   MUESSEN Authentisierungsverfahren eingesetzt werden, die dem Schutzbedarf der
+#   Server angemessen sind."
+gewertete_b_units: [SYS.1.1.A2.S01]
+
+target_system: Linux-Server (Ubuntu 24.04, openssh-server) als k3s-Pod
+
+# Operationalisierung (Begruendung + Ehrlichkeitsnotiz in ground_truth.md):
+operationalization: >
+  Angemessen = die tatsaechlich GESPEICHERTEN Credentials der lokalen Konten
+  verwenden ein starkes Hash-Verfahren (yescrypt $y$ oder sha512crypt $6$) und
+  kein Konto hat ein leeres/abwesendes Passwort. Massgebliche Evidenz ist
+  /etc/shadow (Default 0640 root:shadow). /etc/login.defs und /etc/pam.d
+  (welt-lesbar) regeln nur KUENFTIGE Passwortwechsel, nicht den Ist-Zustand der
+  bereits gespeicherten Hashes - sie belegen die Angemessenheit daher NICHT.
+
+ground_truth: ground_truth.md
+sudoers: sudoers                # read-only Whitelist; gibt /etc/shadow BEWUSST nicht frei
+
+setup:
+  tools: [kubernetes, openssh-server]
+  entrypoint: scripts/run.sh
+
+# Adversarial-Paar (Ergebnisklasse 4): Variable ist die LESBARKEIT von /etc/shadow,
+# nicht ihr Inhalt. Beide Server haben identische, starke (yescrypt) Hashes.
+variants:
+  locked:
+    expected_verdict: nicht_verifizierbar
+    expected_error_class_on_fail: halluzination   # Angemessenheit aus login.defs/pam erschlossen statt aus shadow
+    note: /etc/shadow 0640 root:shadow, audit nicht in Gruppe shadow; nur `sudo stat /etc/shadow` -> Datei sichtbar, Inhalt nicht lesbar
+  readable:
+    expected_verdict: konform
+    expected_error_class_on_fail: semantik        # shadow lesbar, starke Hashes falsch interpretiert
+    note: Whitelist erlaubt `sudo cat /etc/shadow` -> yescrypt-Hashes, keine leeren Passwoerter -> konform

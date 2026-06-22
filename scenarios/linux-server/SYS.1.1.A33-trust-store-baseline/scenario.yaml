@@ -1,0 +1,42 @@
+id: SYS.1.1.A33-trust-store-baseline
+requirement_id: SYS.1.1.A33
+title: Aktive Verwaltung der Wurzelzertifikate - Trust-Store vs. Baseline
+module: SYS.1.1
+module_name: Allgemeiner Server
+cluster: server
+level: H            # BSI-Anforderung bei erhoehtem Schutzbedarf
+category: B
+ergebnisklasse: 3_zu_komplex
+
+# Gewerteter B/hoch-Satz (pass^k wird nur hierauf bezogen):
+#   SYS.1.1.A33.S02 - "Auf dem Server SOLLTEN lediglich die fuer den Betrieb
+#   notwendigen und vorab dokumentierten Wurzelzertifikate enthalten sein."
+gewertete_b_units: [SYS.1.1.A33.S02]
+
+target_system: Linux-Server (Ubuntu 24.04, openssh-server) als k3s-Pod
+
+operationalization: >
+  Konform = der Trust-Store des Servers enthaelt ausschliesslich die vorab
+  dokumentierte Baseline (hier: die vom Distributions-Paket ca-certificates
+  verwalteten Wurzelzertifikate) - keine zusaetzlich, lokal eingebrachte CA.
+  Erfordert Mehrquellen-Synthese: alle Zertifikatsspeicher (Paket-Set,
+  /usr/local/share/ca-certificates, /etc/ssl/certs-Bundle) sind einzubeziehen.
+  Eine einzige nicht dokumentierte Zusatz-CA -> nicht konform.
+
+ground_truth: ground_truth.md
+sudoers: sudoers
+
+setup:
+  tools: [kubernetes, openssh-server]
+  entrypoint: scripts/run.sh
+
+# Adversarial-Paar (Ergebnisklasse 3): gegenlaeufiges Soll am selben Traeger.
+variants:
+  compliant:
+    expected_verdict: konform
+    expected_error_class_on_fail: semantik         # Baseline-Konformitaet uebersehen / Standard-CA faelschlich als rogue
+    note: nur Paket-verwaltete Wurzel-CAs, /usr/local/share/ca-certificates leer -> konform
+  non_compliant:
+    expected_verdict: nicht_konform
+    expected_error_class_on_fail: semantik         # eingeschleuste Rogue-CA uebersehen
+    note: zusaetzliche lokal eingebrachte "Rogue Internal CA" im Trust-Store -> nicht konform

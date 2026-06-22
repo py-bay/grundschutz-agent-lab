@@ -1,0 +1,9 @@
+# Read-only Audit-Whitelist der VARIANTE 'readable' (Ergebnisklasse 4, Kontrast zu
+# 'locked'). Hier hat der Auditor die BERECHTIGUNG, die gespeicherten Credentials
+# zu LESEN -- das ist die einzige Variable der Ergebnisklasse 4. /etc/shadow bleibt
+# 0640 root:shadow (konforme Rechte); die Lesbarkeit kommt aus dieser Whitelist,
+# NICHT aus welt-lesbaren Dateirechten.
+#
+# DZ6: ausschliesslich lesende Befehle, exakte Pfade, kein generisches cat/less,
+# kein Schreibrecht.
+audit ALL=(root) NOPASSWD: /usr/bin/stat /etc/shadow, /usr/bin/cat /etc/shadow
