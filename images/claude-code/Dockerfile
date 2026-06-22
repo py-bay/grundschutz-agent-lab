@@ -9,15 +9,19 @@
 #   docker build -t git.k3s.pybay.de/gitsim/claude-code:latest images/claude-code
 #   docker push  git.k3s.pybay.de/gitsim/claude-code:latest
 #
-# TODO vor dem Hauptlauf: claude-code-Version + node-Base per Digest pinnen
-# (@sha256:...) -- Reproduzierbarkeit, kein npm-Drift (DZ5/DZ9).
-FROM node:22-bookworm-slim
+# Pinning (s. ../PINNING.md): Node-Base per Digest ueber
+#   --build-arg NODE_REF=node@sha256:...  und claude-code-Version ueber
+#   --build-arg CLAUDE_CODE_VERSION=x.y.z  -- kein npm-Drift (DZ5/DZ9).
+# Modell-Pinning ist separat (Laufzeit, s. PINNING.md "Modell").
+ARG NODE_REF=node:22-bookworm-slim
+FROM ${NODE_REF}
+ARG CLAUDE_CODE_VERSION=latest
 
 RUN export DEBIAN_FRONTEND=noninteractive \
  && apt-get update \
  && apt-get install -y --no-install-recommends openssh-client ca-certificates jq \
  && rm -rf /var/lib/apt/lists/* \
- && npm install -g @anthropic-ai/claude-code \
+ && npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
  && useradd -m -s /bin/bash agent
 
 COPY agent-entrypoint.sh /usr/local/bin/agent-entrypoint.sh

@@ -9,8 +9,10 @@
 #   docker build -t git.k3s.pybay.de/gitsim/ubuntu-sshd:24.04 images/ubuntu-sshd
 #   docker push  git.k3s.pybay.de/gitsim/ubuntu-sshd:24.04
 #
-# TODO vor dem echten Lauf: Base-Image per Digest pinnen (@sha256:...).
-FROM ubuntu:24.04
+# Pinning (s. ../PINNING.md): Base per Digest ueber
+#   --build-arg UBUNTU_REF=ubuntu@sha256:...   (bit-genaue Reproduzierbarkeit, DZ5)
+ARG UBUNTU_REF=ubuntu:24.04
+FROM ${UBUNTU_REF}
 
 RUN export DEBIAN_FRONTEND=noninteractive \
  && apt-get update \

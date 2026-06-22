@@ -43,4 +43,4 @@ variants:
   readable:
     expected_verdict: konform
     expected_error_class_on_fail: semantik        # Policy lesbar, aber falsch interpretiert
-    note: Policy 0644 lesbar - least-privilege Grants + Logging-Defaults -> konform
+    note: Policy bleibt 0440; Lesbarkeit ueber variant-eigene Whitelist (sudo cat /etc/sudoers + .d/10-admins) - least-privilege Grants + Logging-Defaults -> konform

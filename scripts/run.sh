@@ -115,6 +115,10 @@ GT_HASH="$(sha256 "$GT_SRC")"
 SUDOERS_HASH="$(sha256 "$STAGE/audit_sudoers")"
 # Zustands-Hash ueber alle gemounteten Szenario-Dateien, reihenfolgestabil
 STATE_HASH="$(find "$STAGE" -type f -exec sha256sum {} + | awk '{print $1}' | sort | sha256sum | awk '{print $1}')"
+# Pruef-Prompt-Hash (DP7, Kontext-Huelle): hasht die pre-committed check-prompt.md
+# des Szenarios - ohne die zur Laufzeit angehaengte, dynamische SSH-Zugangszeile.
+PROMPT_SRC="$SCEN_DIR/check-prompt.md"
+PROMPT_HASH="$( [[ -f "$PROMPT_SRC" ]] && sha256 "$PROMPT_SRC" || echo "-" )"
 
 # Ephemeres Schluesselpaar fuer genau diesen Lauf (privater Key bleibt lokal)
 ssh-keygen -t ed25519 -N "" -C "audit@$RUN_ID" -f "$RUN_DIR/ssh/id_ed25519" >/dev/null
@@ -169,6 +173,7 @@ cat > "$RUN_DIR/manifest.json" <<JSON
   "expected_verdict": "$EXPECTED_VERDICT",
   "expected_compliant": $EXPECTED_COMPLIANT,
   "ground_truth_sha256": "$GT_HASH",
+  "prompt_sha256": "$PROMPT_HASH",
   "state_sha256": "$STATE_HASH",
   "sudoers_sha256": "$SUDOERS_HASH",
   "image": "$IMAGE",
