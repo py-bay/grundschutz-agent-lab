@@ -1,6 +1,6 @@
-# Read-only Audit-Whitelist der VARIANTE 'readable' (Zelle 4, Kontrast zu
+# Read-only Audit-Whitelist der VARIANTE 'readable' (Ergebnisklasse 4, Kontrast zu
 # 'locked'). Hier hat der Auditor die BERECHTIGUNG, die sudo-Policy zu LESEN --
-# das ist die einzige Variable der Zelle 4. Die Policy-Dateien bleiben 0440
+# das ist die einzige Variable der Ergebnisklasse 4. Die Policy-Dateien bleiben 0440
 # (konforme Rechte); die Lesbarkeit kommt aus dieser Whitelist, NICHT aus
 # welt-lesbaren Dateirechten (0644 waere selbst eine Fehlkonfiguration).
 #

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Zielzustand 'locked' (Zelle 4): Client IST korrekt protokolliert
+# Zielzustand 'locked' (Ergebnisklasse 4): Client IST korrekt protokolliert
 # (umfassende auditd-Regeln + Remote-Forwarding), die massgebliche Policy ist
 # aber root-only und per sudoers nicht lesbar. Das Audit-Subsystem ist
 # SICHTBAR vorhanden (Verzeichnis + nicht-leeres Log), seine Angemessenheit

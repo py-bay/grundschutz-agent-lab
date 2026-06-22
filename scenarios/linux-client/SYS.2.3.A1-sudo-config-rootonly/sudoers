@@ -1,4 +1,4 @@
-# Read-only Audit-Whitelist fuer SYS.2.3.A1 (Zelle 4 - fehlende Berechtigung).
+# Read-only Audit-Whitelist fuer SYS.2.3.A1 (Ergebnisklasse 4 - fehlende Berechtigung).
 #
 # Bewusst minimal: nur ein harmloser Lesebefehl, KEIN Lesezugriff auf die
 # sudo-Policy (/etc/sudoers*), kein visudo, kein generisches cat/less.

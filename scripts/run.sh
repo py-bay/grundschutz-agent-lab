@@ -54,10 +54,10 @@ yval() { sed -n "s/^$1:[[:space:]]*//p" "$SCEN_DIR/scenario.yaml" | head -n1 | s
 REQ_ID="$(yval requirement_id)"
 MODULE_ID="$(yval module)"
 CATEGORY="$(yval category)"
-CELL="$(yval cell)"
+ERGEBNISKLASSE="$(yval ergebnisklasse)"
 [[ -n "$REQ_ID" ]] || REQ_ID="$SCENARIO"
 [[ -n "$CATEGORY" ]] || CATEGORY="A"
-[[ -n "$CELL" ]] || CELL="-"
+[[ -n "$ERGEBNISKLASSE" ]] || ERGEBNISKLASSE="-"
 
 # --- Staging: genau die Dateien zusammenstellen, die in den Pod gemountet werden ---
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -99,7 +99,7 @@ esac
 
 # sudoers (read-only Kommando-Whitelist): variant-spezifisch (variants/<v>/sudoers)
 # vor szenario-weit (<scen>/sudoers) vor Legacy-Default. So kann eine Variante dem
-# Auditor gezielt mehr/weniger Lesezugriff geben - der saubere Zelle-4-Kontrast:
+# Auditor gezielt mehr/weniger Lesezugriff geben - der saubere Ergebnisklasse-4-Kontrast:
 # 'locked' ohne Policy-Leserecht (-> nicht_verifizierbar), 'readable' mit (-> konform),
 # bei in beiden Faellen identischer, korrekt 0440-gerechteter Policy.
 if [[ -f "$VAR_DIR/sudoers" ]]; then
@@ -125,14 +125,14 @@ SECRET_NAME="authkeys-$(sanitize "${VARIANT}-${RAND}")"
 RUN_ID_LABEL="$(label_safe "$RUN_ID")"
 REQ_ID_LABEL="$(label_safe "$REQ_ID")"
 VARIANT_LABEL="$(label_safe "$VARIANT")"
-CELL_LABEL="$(label_safe "$CELL")"
+ERGEBNISKLASSE_LABEL="$(label_safe "$ERGEBNISKLASSE")"
 
 # OTEL-Resource-Attribute (keine Leerzeichen erlaubt) -> taggt jede
 # Claude-Code-Metrik/jedes Event mit run.id, in OpenObserve pro Lauf abfragbar
-OTEL_ATTRS="run.id=${RUN_ID},scenario=${SCENARIO},variant=${VARIANT},requirement.id=${REQ_ID},cell=${CELL}"
+OTEL_ATTRS="run.id=${RUN_ID},scenario=${SCENARIO},variant=${VARIANT},requirement.id=${REQ_ID},ergebnisklasse=${ERGEBNISKLASSE}"
 
 info "Run-ID: $RUN_ID"
-info "Kategorie/Zelle: $CATEGORY / $CELL | erwartetes Urteil: $EXPECTED_VERDICT"
+info "Kategorie/Ergebnisklasse: $CATEGORY / $ERGEBNISKLASSE | erwartetes Urteil: $EXPECTED_VERDICT"
 info "Namespace/Pod: $NAMESPACE/$POD_NAME (node role=lab)"
 
 # --- Cluster-Objekte erzeugen ---
@@ -147,8 +147,8 @@ $KUBECTL -n "$NAMESPACE" label --overwrite configmap "$CM_NAME" "thesis.pybay.de
 $KUBECTL -n "$NAMESPACE" label --overwrite secret "$SECRET_NAME" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
 
 export POD_NAME NAMESPACE IMAGE RUN_ID RUN_ID_LABEL SCENARIO REQ_ID REQ_ID_LABEL \
-       VARIANT VARIANT_LABEL CELL_LABEL GT_HASH STATE_HASH CM_NAME SECRET_NAME
-envsubst '${POD_NAME} ${NAMESPACE} ${IMAGE} ${RUN_ID} ${RUN_ID_LABEL} ${SCENARIO} ${REQ_ID} ${REQ_ID_LABEL} ${VARIANT} ${VARIANT_LABEL} ${CELL_LABEL} ${GT_HASH} ${STATE_HASH} ${CM_NAME} ${SECRET_NAME}' \
+       VARIANT VARIANT_LABEL ERGEBNISKLASSE_LABEL GT_HASH STATE_HASH CM_NAME SECRET_NAME
+envsubst '${POD_NAME} ${NAMESPACE} ${IMAGE} ${RUN_ID} ${RUN_ID_LABEL} ${SCENARIO} ${REQ_ID} ${REQ_ID_LABEL} ${VARIANT} ${VARIANT_LABEL} ${ERGEBNISKLASSE_LABEL} ${GT_HASH} ${STATE_HASH} ${CM_NAME} ${SECRET_NAME}' \
   < "$REPO_ROOT/kubernetes/target-pod.tmpl.yaml" > "$RUN_DIR/pod.yaml"
 $KUBECTL apply -f "$RUN_DIR/pod.yaml" >/dev/null
 
@@ -164,7 +164,7 @@ cat > "$RUN_DIR/manifest.json" <<JSON
   "requirement_id": "$REQ_ID",
   "module_id": "$MODULE_ID",
   "category": "$CATEGORY",
-  "cell": "$CELL",
+  "ergebnisklasse": "$ERGEBNISKLASSE",
   "variant": "$VARIANT",
   "expected_verdict": "$EXPECTED_VERDICT",
   "expected_compliant": $EXPECTED_COMPLIANT,
@@ -253,8 +253,8 @@ if [[ "$AGENT_INCLUSTER" == true ]]; then
   $KUBECTL -n "$NAMESPACE" label --overwrite service "$TARGET_SVC" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
 
   # Agent-Job rendern + starten.
-  export JOB_NAME AGENT_IMAGE AGENT_KEY_SECRET AGENT_PROMPT_CM OTEL_ATTRS REQ_ID_LABEL CELL_LABEL
-  envsubst '${JOB_NAME} ${NAMESPACE} ${RUN_ID_LABEL} ${REQ_ID_LABEL} ${CELL_LABEL} ${AGENT_IMAGE} ${AGENT_KEY_SECRET} ${AGENT_PROMPT_CM} ${OTEL_ATTRS}' \
+  export JOB_NAME AGENT_IMAGE AGENT_KEY_SECRET AGENT_PROMPT_CM OTEL_ATTRS REQ_ID_LABEL ERGEBNISKLASSE_LABEL
+  envsubst '${JOB_NAME} ${NAMESPACE} ${RUN_ID_LABEL} ${REQ_ID_LABEL} ${ERGEBNISKLASSE_LABEL} ${AGENT_IMAGE} ${AGENT_KEY_SECRET} ${AGENT_PROMPT_CM} ${OTEL_ATTRS}' \
     < "$REPO_ROOT/kubernetes/agent-job.tmpl.yaml" > "$RUN_DIR/agent-job.yaml"
   $KUBECTL apply -f "$RUN_DIR/agent-job.yaml" >/dev/null
   info "Agent-Job $JOB_NAME gestartet (Image $AGENT_IMAGE), warte auf Completion ..."
@@ -319,7 +319,7 @@ cat >&2 <<EOF
 
 ================ LAUF BEREIT ================
  Run-ID : $RUN_ID
- Zelle  : $CELL | erwartetes Urteil: $EXPECTED_VERDICT
+ Ergebnisklasse  : $ERGEBNISKLASSE | erwartetes Urteil: $EXPECTED_VERDICT
  SSH    : ssh -i runs/$RUN_ID/ssh/id_ed25519 -o StrictHostKeyChecking=no -p $PORT audit@127.0.0.1
 
  Agent (Claude Code) mit run.id-Telemetrie starten:

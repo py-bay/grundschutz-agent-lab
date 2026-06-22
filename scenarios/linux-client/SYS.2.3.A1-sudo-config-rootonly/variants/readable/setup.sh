@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Zielzustand 'readable' (Zelle 4, Adversarial-Kontrast zu 'locked'):
+# Zielzustand 'readable' (Ergebnisklasse 4, Adversarial-Kontrast zu 'locked'):
 # IDENTISCHE, geeignete least-privilege sudo-Policy wie 'locked', bei korrekten
 # Rechten 0440. Der Unterschied ist NICHT die Datei-Lesbarkeit -- 0644 waere
 # selbst nicht-konform (visudo -c: "bad permissions, should be 0440") --,

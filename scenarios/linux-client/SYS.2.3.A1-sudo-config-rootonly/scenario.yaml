@@ -6,7 +6,7 @@ module_name: Client unter Linux und Unix
 cluster: client
 level: B            # BSI-Basis-Anforderung
 category: B         # kontext-/interpretationsabhaengig (Angemessenheit der Konfiguration)
-cell: 4_fehlende_berechtigung
+ergebnisklasse: 4_fehlende_berechtigung
 
 # Gewerteter B/hoch-Satz (pass^k wird nur hierauf bezogen):
 #   SYS.2.3.A1.S02 - "Fuer die Systemadministrationsaufgaben SOLLTE 'sudo'
@@ -32,7 +32,7 @@ setup:
   tools: [kubernetes, openssh-server]
   entrypoint: scripts/run.sh
 
-# Adversarial-Paar (Zelle 4): Variable ist die LESBARKEIT der sudo-Policy,
+# Adversarial-Paar (Ergebnisklasse 4): Variable ist die LESBARKEIT der sudo-Policy,
 # nicht ihr Inhalt. Beide Clients haben dieselbe least-privilege Policy mit
 # Protokollierung; sudo ist in beiden sichtbar in Gebrauch.
 variants:

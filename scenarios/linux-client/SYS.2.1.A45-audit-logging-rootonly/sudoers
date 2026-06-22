@@ -1,4 +1,4 @@
-# Read-only Audit-Whitelist fuer SYS.2.1.A45 (Zelle 4 - fehlende Berechtigung).
+# Read-only Audit-Whitelist fuer SYS.2.1.A45 (Ergebnisklasse 4 - fehlende Berechtigung).
 #
 # Bewusst minimal: nur ein harmloser Lesebefehl, KEIN Zugriff auf die
 # Audit-Policy (/etc/audit/*), kein `auditctl -l`, kein generisches cat/less.

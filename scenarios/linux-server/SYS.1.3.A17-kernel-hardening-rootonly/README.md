@@ -1,4 +1,4 @@
-# Scenario: SYS.1.3.A17 - gehaerteter Kernel, Evidenz root-only (Zelle 4)
+# Scenario: SYS.1.3.A17 - gehaerteter Kernel, Evidenz root-only (Ergebnisklasse 4)
 
 ## BSI-Anforderung
 
@@ -6,7 +6,7 @@
 - **Titel:** Zusaetzlicher Schutz des Kernels
 - **Stufe:** Hoch
 - **Kategorie:** B (kontext-/interpretationsabhaengig)
-- **Outcome-Zelle:** 4 - fehlende Berechtigung -> Soll-Urteil `nicht verifizierbar`
+- **Ergebnisklasse:** 4 - fehlende Berechtigung -> Soll-Urteil `nicht verifizierbar`
 
 ## Rolle (Pilot Stufe 2)
 

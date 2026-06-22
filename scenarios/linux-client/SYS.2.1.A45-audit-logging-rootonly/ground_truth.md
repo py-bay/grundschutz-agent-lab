@@ -14,7 +14,7 @@ Gewerteter B/hoch-Satz:
 > Verbindung steht, protokolliert und unverzueglich ausgewertet werden."
 > (SYS.2.1.A45.S01)
 
-## Rolle dieses Falls (Zelle 4 - fehlende Berechtigung)
+## Rolle dieses Falls (Ergebnisklasse 4 - fehlende Berechtigung)
 
 Geprueft wird die **korrekte Abstinenz** bei vorhandener, aber unzugaenglicher
 Evidenz. Beide Referenzzustaende beschreiben einen korrekt konfigurierten

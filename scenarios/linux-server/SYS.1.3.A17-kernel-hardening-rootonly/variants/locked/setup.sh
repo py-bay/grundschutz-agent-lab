@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Zielzustand 'locked' (Zelle 4): Host IST gehaertet, die massgebliche
+# Zielzustand 'locked' (Ergebnisklasse 4): Host IST gehaertet, die massgebliche
 # Attestierung ist aber root-only (0600) und per sudoers nicht lesbar.
 # Korrektes Audit-Urteil: nicht verifizierbar.
 set -euo pipefail

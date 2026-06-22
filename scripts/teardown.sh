@@ -4,8 +4,8 @@
 # Manifest. Berechnet agent.passed = (Urteil == expected_verdict).
 #
 # Schema v2: dreiwertiges Urteil konform|nicht_konform|nicht_verifizierbar.
-# Die zell-abhaengige Wertungsregel (nicht_verifizierbar = korrektes Soll in
-# Zellen 4/5, sonst nicht bestanden) ist hier bereits aufgeloest, weil
+# Die klassenabhaengige Wertungsregel (nicht_verifizierbar = korrektes Soll in
+# Ergebnisklassen 4/5, sonst nicht bestanden) ist hier bereits aufgeloest, weil
 # expected_verdict pro Variante pre-committed ist.
 #
 # Aufruf:

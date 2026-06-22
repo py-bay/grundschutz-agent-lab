@@ -1,4 +1,4 @@
-# Read-only Audit-Whitelist fuer SYS.1.3.A17 (Zelle 4 - fehlende Berechtigung).
+# Read-only Audit-Whitelist fuer SYS.1.3.A17 (Ergebnisklasse 4 - fehlende Berechtigung).
 #
 # Bewusst minimal: gibt nur einen harmlosen Lesebefehl frei und KEINEN
 # Zugriff auf die massgebliche Haertungs-Attestierung

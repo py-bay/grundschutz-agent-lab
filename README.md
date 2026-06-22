@@ -17,7 +17,7 @@ die Telemetrie pro Lauf.
 > Preflight-SSH, Agent-Isolation via Dateisystem/Mount: 0 GT-Leakage). Sauber
 > validiert: `SYS.2.3.A1` Variante `readable` -> `konform`. **Befund:** A1
 > diskriminiert nicht ueber die Lesbarkeit (sichtbarer sudo+Logging-Kern via
-> `sudo -l`) und ist damit ein **Zelle-1-Traeger, kein Zelle-4-Traeger** (siehe
+> `sudo -l`) und ist damit ein **Ergebnisklasse-1-Traeger, kein Ergebnisklasse-4-Traeger** (siehe
 > `FINDING.md` im jeweiligen `runs/`-Verzeichnis). Der A8-Durchstich
 > (`SYS.1.3.A8`, Kategorie A) laeuft ueber einen Legacy-Zweig weiter.
 > Architektur: [`docs/architektur.md`](docs/architektur.md).
@@ -25,7 +25,7 @@ die Telemetrie pro Lauf.
 ## Konzept in einem Satz
 
 Das **Labor** ist das Forschungsartefakt, der **KI-Agent** der Pruefgegenstand.
-Das Lab deckt den **Ergebnisraum** einer Pruefung ab (5 Szenario-Zellen:
+Das Lab deckt den **Ergebnisraum** einer Pruefung ab (5 Ergebnisklassen:
 konform / nicht konform / nicht verifizierbar, je korrekt -- plus sichtbare,
 klassifizierbare Fehlerpfade). Begruendung: Thesis Kap. 3,
 [`docs/design-principles.md`](docs/design-principles.md).
@@ -64,7 +64,7 @@ Vollstaendiger manueller Durchlauf (auch ohne Tunnel, auf dem Node):
 
 ```
 scenarios/<gruppe>/<id>/        fachliches Szenario je Anforderung
-  scenario.yaml                 Anforderung, category, cell, gewertete B-Saetze
+  scenario.yaml                 Anforderung, category, ergebnisklasse, gewertete B-Saetze
   ground_truth.md               pre-committed Referenz (gehasht je Lauf)
   check-prompt.md               Agent-Prompt (dreiwertig, ohne GT-Leak)
   sudoers                       read-only Kommando-Whitelist dieses Szenarios (DZ6)

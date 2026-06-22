@@ -15,7 +15,7 @@ metadata:
   labels:
     thesis.pybay.de/run-id: "${RUN_ID_LABEL}"
     thesis.pybay.de/requirement: "${REQ_ID_LABEL}"
-    thesis.pybay.de/cell: "${CELL_LABEL}"
+    thesis.pybay.de/ergebnisklasse: "${ERGEBNISKLASSE_LABEL}"
     thesis.pybay.de/role: "agent"
 spec:
   backoffLimit: 0                 # kein Retry: ein Lauf = ein Versuch (pass^k zaehlt extern)

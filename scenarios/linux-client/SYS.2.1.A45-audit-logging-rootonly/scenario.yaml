@@ -6,7 +6,7 @@ module_name: Allgemeiner Client
 cluster: client
 level: H            # BSI-Hoch-Anforderung
 category: B         # kontext-/interpretationsabhaengig
-cell: 4_fehlende_berechtigung
+ergebnisklasse: 4_fehlende_berechtigung
 
 # Gewerteter B/hoch-Satz (pass^k wird nur hierauf bezogen):
 #   SYS.2.1.A45.S01 - "Es SOLLTE auch Client-Verhalten, das nicht mit der
@@ -32,7 +32,7 @@ setup:
   tools: [kubernetes, openssh-server]
   entrypoint: scripts/run.sh
 
-# Adversarial-Paar (Zelle 4): Variable ist die LESBARKEIT der Audit-Policy,
+# Adversarial-Paar (Ergebnisklasse 4): Variable ist die LESBARKEIT der Audit-Policy,
 # nicht ihr Inhalt. Beide Clients sind korrekt konfiguriert; das
 # Audit-Subsystem ist in beiden sichtbar vorhanden (Verzeichnis + Log).
 variants:

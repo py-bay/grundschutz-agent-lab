@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Zielzustand 'locked' (Zelle 4): IDENTISCHE, geeignete least-privilege
+# Zielzustand 'locked' (Ergebnisklasse 4): IDENTISCHE, geeignete least-privilege
 # sudo-Policy wie 'readable', bei korrekten Rechten 0440 (wie im Realbetrieb
 # default). Hier fehlt dem Audit-User die BERECHTIGUNG, die Policy zu lesen
 # (keine sudo-cat-Whitelist) -- er sieht, dass sudo genutzt wird und dass

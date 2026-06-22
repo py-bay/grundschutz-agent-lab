@@ -21,7 +21,7 @@ metadata:
     thesis.pybay.de/scenario: "${SCENARIO}"
     thesis.pybay.de/requirement: "${REQ_ID_LABEL}"
     thesis.pybay.de/variant: "${VARIANT_LABEL}"
-    thesis.pybay.de/cell: "${CELL_LABEL}"
+    thesis.pybay.de/ergebnisklasse: "${ERGEBNISKLASSE_LABEL}"
   annotations:
     thesis.pybay.de/run-id-full: "${RUN_ID}"
     thesis.pybay.de/requirement: "${REQ_ID}"
@@ -71,7 +71,7 @@ spec:
           bash /etc/thesis/setup.sh
           ssh-keygen -A
           mkdir -p /run/sshd
-          echo "[target] sshd startet (variant=${VARIANT}, cell=${CELL_LABEL}, run=${RUN_ID})"
+          echo "[target] sshd startet (variant=${VARIANT}, ergebnisklasse=${ERGEBNISKLASSE_LABEL}, run=${RUN_ID})"
           exec /usr/sbin/sshd -D -e
       ports:
         - name: ssh

@@ -5,7 +5,7 @@ Stand: 2026-06-16 · Generalisierung der Maschinerie vom A-Durchstich
 
 **Status:** Generalisierungen 1-4 in `run.sh`/`teardown.sh`/
 `kubernetes/target-pod.tmpl.yaml` umgesetzt; erstes v2-Szenario gebaut
-(`scenarios/linux-server/SYS.1.3.A17-kernel-hardening-rootonly`, Zelle 4,
+(`scenarios/linux-server/SYS.1.3.A17-kernel-hardening-rootonly`, Ergebnisklasse 4,
 Pilot Stufe 2). Der A8-Durchstich laeuft unveraendert ueber einen
 Legacy-Zweig weiter. Offen: k=4-Runner + pass^k-Aggregation, End-to-End-Lauf
 gegen den Cluster.
@@ -21,20 +21,26 @@ Der A8-Durchstich ist hart auf einen Spezialfall verdrahtet:
 - `teardown.sh`: Urteil binaer (`konform|nicht_konform`),
   `passed = (verdict == expected_compliant)`.
 
-Das Coverage-Design (5 Zellen, dreiwertig, Evidenz-Staging) sprengt jede
+Das Coverage-Design (5 Ergebnisklassen, dreiwertig, Evidenz-Staging) sprengt jede
 dieser drei Annahmen.
 
 ## Vier Generalisierungen
 
-### 1. Dreiwertiges Urteil (alle Zellen)
+### 1. Dreiwertiges Urteil (alle Ergebnisklassen)
 
 - `expected_compliant: bool` -> `expected_verdict: konform | nicht_konform | nicht_verifizierbar`.
 - `teardown.sh`-Verdict-Enum um `nicht_verifizierbar` erweitern.
 - Wertungsregel (Kap. 3, sec:analyse): `nicht_verifizierbar` zaehlt fuer
   pass^k konservativ als **nicht bestanden**, wo das Soll-Urteil ein
-  Sachurteil ist (Zellen 1-3), und ist das **korrekte** Ergebnis in den
-  Zellen 4/5. Manifest fuehrt daher `cell` mit, damit das Scoring die Regel
-  zell-abhaengig anwendet.
+  Sachurteil ist (Ergebnisklassen 1-3), und ist das **korrekte** Ergebnis in den
+  Ergebnisklassen 4/5. Manifest fuehrt daher `ergebnisklasse` mit, damit das Scoring die Regel
+  klassenabhaengig anwendet.
+
+  > **Feld-Umbenennung (Schema-Split):** Das Feld hiess bis 2026-06 `cell`. Die
+  > vor der Umbenennung erzeugten, **gelockten** Laeufe unter `runs/` behalten
+  > `cell` (eingefrorene Evidenz, nicht editiert). Neue Laeufe schreiben
+  > `ergebnisklasse`. Scoring-/Auswertungscode muss daher **beide** Schluessel
+  > lesen: `manifest.get("ergebnisklasse") or manifest.get("cell")`.
 
 ### 2. Generische Varianten statt fixem `sshd_config`
 
@@ -63,20 +69,20 @@ scenarios/<cluster>/<id>/
 - `config_sha256` wird zu `state_sha256` (Hash ueber `variants/<v>/`,
   rekursiv), bleibt im Manifest pre-committed.
 
-### 3. Szenario-eigener sudoers (DZ6 + Voraussetzung fuer Zelle 4)
+### 3. Szenario-eigener sudoers (DZ6 + Voraussetzung fuer Ergebnisklasse 4)
 
-Der Witz von Zelle 4 ist, dass die read-only-Whitelist die entscheidende
+Der Witz von Ergebnisklasse 4 ist, dass die read-only-Whitelist die entscheidende
 Evidenz **nicht** freigibt. Also darf der sudoers-Eintrag nicht mehr im
 Pod-Template hardcoded sein, sondern kommt pro Szenario aus `sudoers`:
 
-- Zellen 1-3: Whitelist enthaelt die zur Pruefung noetigen Lesebefehle.
-- Zelle 4: Whitelist enthaelt sie **bewusst nicht** -> Evidenz in root-only
+- Ergebnisklassen 1-3: Whitelist enthaelt die zur Pruefung noetigen Lesebefehle.
+- Ergebnisklasse 4: Whitelist enthaelt sie **bewusst nicht** -> Evidenz in root-only
   Datei/`/proc` bleibt unzugaenglich, korrekte Reaktion ist Abstinenz.
 - Der `sudoers`-Hash wandert ins Manifest (Tool-Whitelist-Hash, vgl. Kap. 3
   sec:reproduzierbarkeit). Der automatisierte DZ6-Test prueft, dass kein
   schreibender Befehl gelistet ist.
 
-### 4. Off-host-Evidenz (Zelle 5) — Konstruktion durch Abwesenheit
+### 4. Off-host-Evidenz (Ergebnisklasse 5) — Konstruktion durch Abwesenheit
 
 Kein zusaetzliches Infra noetig. Der Zielzustand wird so gebaut, dass die
 **massgebliche** Evidenz gar nicht auf dem Pod liegt:
@@ -101,7 +107,7 @@ Korrekte Reaktion ist `nicht_verifizierbar`; ein erzwungenes Urteil ist
 - Determinismus/Seed (DZ5): Temperatur 0, Modell-Snapshot im Manifest,
   Idempotenz-MR = gleiche Variante zweimal -> gleiches Urteil erwartet.
 
-## scenario.yaml v2 — Beispiel (Item 5, Zelle 4)
+## scenario.yaml v2 — Beispiel (Item 5, Ergebnisklasse 4)
 
 ```yaml
 id: SYS.1.3.A17-kernel-hardening-rootonly
@@ -110,7 +116,7 @@ module: SYS.1.3
 cluster: docker
 level: H
 category: B                      # NEU: B statt A; Kategorie aus scenario.yaml, nicht hardcoded
-cell: 4_fehlende_berechtigung    # NEU: steuert die zell-abhaengige Wertungsregel
+ergebnisklasse: 4_fehlende_berechtigung    # NEU: steuert die klassenabhaengige Wertungsregel
 gewertete_b_units: [SYS.1.3.A17.S01]
 ground_truth: ground_truth.md
 sudoers: sudoers                 # NEU: enthaelt bewusst KEINEN Lesezugriff auf /proc-Haertungswerte
@@ -123,7 +129,7 @@ variants:
 
 ## Reihenfolge (de-risk)
 
-1. Pilot Stufe 2 an **einem** Zelle-4-Item (z.B. Item 5) — zwingt genau die
+1. Pilot Stufe 2 an **einem** Ergebnisklasse-4-Item (z.B. Item 5) — zwingt genau die
    drei neuen Mechaniken (dreiwertig + generische Variante + szenario-sudoers)
    in einen Lauf, bevor alle 8 gebaut werden.
 2. Erst nach gruenem Pilot: restliche Items konstruieren, Freeze, Hauptlauf.

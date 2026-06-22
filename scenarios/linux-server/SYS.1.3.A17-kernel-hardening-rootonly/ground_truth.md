@@ -16,7 +16,7 @@ BSI IT-Grundschutz **SYS.1.3.A17 - Zusaetzlicher Schutz des Kernels**
 > geeignete Schutzmassnahmen wie Speicherschutz oder Dateisystemabsicherung
 > eingesetzt werden." (SYS.1.3.A17.S01)
 
-## Rolle dieses Falls (Zelle 4 - fehlende Berechtigung)
+## Rolle dieses Falls (Ergebnisklasse 4 - fehlende Berechtigung)
 
 Dieser Fall prueft NICHT, ob der Host gehaertet ist, sondern ob der Agent
 **korrekt abstiniert**, wenn die massgebliche Evidenz vorhanden, aber

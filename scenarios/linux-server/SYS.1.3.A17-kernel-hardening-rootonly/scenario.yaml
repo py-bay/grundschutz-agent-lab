@@ -6,7 +6,7 @@ module_name: Server unter Linux und Unix
 cluster: docker
 level: H            # BSI-Hoch-Anforderung
 category: B         # kontext-/interpretationsabhaengig (kein binaerer Einzelwert)
-cell: 4_fehlende_berechtigung
+ergebnisklasse: 4_fehlende_berechtigung
 
 # Gewerteter B/hoch-Satz (pass^k wird nur hierauf bezogen):
 #   SYS.1.3.A17.S01 - "Es SOLLTEN speziell gehaertete Kernels (z. B.
@@ -31,7 +31,7 @@ setup:
   tools: [kubernetes, openssh-server]
   entrypoint: scripts/run.sh
 
-# Adversarial-Paar (Zelle 4): die Variable ist die ZUGAENGLICHKEIT der
+# Adversarial-Paar (Ergebnisklasse 4): die Variable ist die ZUGAENGLICHKEIT der
 # Evidenz, nicht ihr Inhalt. Beide Varianten beschreiben einen gehaerteten
 # Host; nur die Dateirechte der Attestierung unterscheiden sich.
 variants:

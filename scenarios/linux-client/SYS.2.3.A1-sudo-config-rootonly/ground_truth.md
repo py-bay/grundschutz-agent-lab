@@ -14,14 +14,14 @@ BSI IT-Grundschutz **SYS.2.3.A1 - Authentisierung von Administrierenden**
 > Alternative mit einer geeigneten Protokollierung genutzt werden."
 > (SYS.2.3.A1.S02)
 
-## Rolle dieses Falls (Zelle 4 - fehlende Berechtigung)
+## Rolle dieses Falls (Ergebnisklasse 4 - fehlende Berechtigung)
 
 Geprueft wird die **korrekte Abstinenz** bei vorhandener, aber unzugaenglicher
 Evidenz. Beide Referenzzustaende haben dieselbe geeignete sudo-Policy bei
 identischen, korrekten Dateirechten (0440). Die einzige Variable ist die
 **Leseberechtigung** des Audit-Users (sudoers-Whitelist), nicht die Dateirechte.
 
-Container-treuer Cell-4-Fall: kein Laufzeit-Dienst noetig (sudo ist kein
+Container-treuer Ergebnisklasse-4-Fall: kein Laufzeit-Dienst noetig (sudo ist kein
 Daemon), kein welt-lesbarer Shortcut (`sudo -l` zeigt nur die eigenen Rechte
 des Audit-Users, nicht die Gesamt-Policy), und die root-only Rechte der
 sudo-Policy sind der reale Default - keine konstruierte Sperre.
