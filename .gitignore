@@ -10,6 +10,8 @@ runs/*/portforward.pid
 runs/*/portforward.log
 runs/*/agent_stderr.log
 runs/*/agent_job.log
+runs/*/preflight.log
+runs/*/stage/
 !runs/.gitkeep
 # Bewusst NICHT ignoriert (= versionierter Forschungs-Record):
 #   runs/*/manifest.json, runs/*/agent_output.json, runs/*/transcript.jsonl,

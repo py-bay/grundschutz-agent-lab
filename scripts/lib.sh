@@ -8,6 +8,10 @@ IMAGE="${IMAGE:-ubuntu:24.04}"
 # Pruefagent-Image (in-cluster, --agent-incluster). Aus der Forgejo-OCI-Registry.
 # Vor dem Hauptlauf per Digest pinnen (siehe images/claude-code/Dockerfile).
 AGENT_IMAGE="${AGENT_IMAGE:-git.k3s.pybay.de/gitsim/claude-code:latest}"
+# Modell des Pruefagenten (DZ5/DZ9: versionierter, gepinnter Parameter). Leer =
+# claude-CLI-Default (NICHT reproduzierbar, im Pilot ein Sonnet/Haiku-Mix). Fuer
+# den Hauptlauf pinnen, z.B. AGENT_MODEL=claude-opus-4-8 (s. images/PINNING.md).
+AGENT_MODEL="${AGENT_MODEL:-}"
 
 # kubectl-Aufruf: auf dem Laptop "kubectl" (braucht KUBECONFIG/Tunnel),
 # direkt auf dem k3s-Node "k3s kubectl" (nutzt /etc/rancher/k3s/k3s.yaml
