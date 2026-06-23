@@ -19,8 +19,11 @@ MACs hmac-sha2-256,hmac-sha1
 KexAlgorithms curve25519-sha256,diffie-hellman-group14-sha1
 SSHD
 
-# Host-Keys sicherstellen (idempotent) und Konfiguration validieren. Schlaegt
-# sshd -t fehl (Verfahren in dieser OpenSSH-Version nicht verfuegbar), bricht der
-# Lauf hier sauber ab statt einen halb-gestarteten sshd zu hinterlassen.
+# Host-Keys + privsep-Verzeichnis (/run/sshd) sicherstellen, dann Konfiguration
+# validieren. /run/sshd MUSS vor `sshd -t` existieren ("Missing privilege
+# separation directory"). Schlaegt sshd -t fehl (Verfahren in dieser
+# OpenSSH-Version nicht verfuegbar), bricht der Lauf hier sauber ab statt einen
+# halb-gestarteten sshd zu hinterlassen.
+mkdir -p /run/sshd
 ssh-keygen -A >/dev/null 2>&1 || true
 sshd -t

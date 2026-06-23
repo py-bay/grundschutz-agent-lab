@@ -18,7 +18,9 @@ MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,h
 KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512
 SSHD
 
-# Host-Keys sicherstellen (idempotent; Bootstrap ruft ssh-keygen -A erneut) und
-# Konfiguration validieren, damit der Pod nur mit gueltiger Krypto-Suite startet.
+# Host-Keys + privsep-Verzeichnis sicherstellen (idempotent; der Bootstrap
+# wiederholt beides), dann Konfiguration validieren. /run/sshd MUSS vor `sshd -t`
+# existieren, sonst: "Missing privilege separation directory: /run/sshd".
+mkdir -p /run/sshd
 ssh-keygen -A >/dev/null 2>&1 || true
 sshd -t

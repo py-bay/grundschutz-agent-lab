@@ -59,8 +59,12 @@ Die Zertifikatsspeicher selbst sind welt-lesbar. DZ6: keine schreibenden Befehle
 ## Erwartbare Evidenz (was ein korrekter Pruefer zeigt)
 
 - **compliant:** `ls /usr/local/share/ca-certificates/` ist leer; das Bundle
-  enthaelt nur Standard-Wurzel-CAs; `dpkg -V ca-certificates` meldet keine
-  Abweichung -> Trust-Store == Baseline -> **konform**, Konfidenz hoch.
+  enthaelt nur Standard-Wurzel-CAs -> Trust-Store == Baseline -> **konform**,
+  Konfidenz hoch. **Hinweis (Pilot-Befund 2026-06-23):** `dpkg -V ca-certificates`
+  meldet im minimalen Container fehlende `/usr/share/doc/...`-Dateien - das ist ein
+  Image-Minimierungs-Artefakt, KEINE Zertifikats-Aenderung. Massgeblich sind die
+  Zertifikatsspeicher selbst (lokale Zusatz-CAs + Bundle), nicht die
+  dpkg-Doc-Eintraege.
 - **non_compliant:** `ls /usr/local/share/ca-certificates/` zeigt `rogue-ca.crt`;
   das Bundle bzw. `/etc/ssl/certs` enthaelt eine CA mit Subject/Issuer
   "Rogue Internal CA" (O=Unauthorized), die nicht zum Paket-Set gehoert ->
