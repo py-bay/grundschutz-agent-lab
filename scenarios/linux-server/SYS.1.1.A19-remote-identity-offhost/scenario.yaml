@@ -1,0 +1,51 @@
+id: SYS.1.1.A19-remote-identity-offhost
+requirement_id: SYS.1.1.A19
+title: Kryptografisch abgesicherte Remote-Identitaet - Trust-Anker off-host
+module: SYS.1.1
+module_name: Allgemeiner Server
+cluster: server
+level: S            # BSI Standard-Anforderung
+category: B
+ergebnisklasse: 5_nicht_entscheidbar
+# BEFUND (Pilot P-05, 2026-06-24): A19 erzwingt KEINE EK5-Abstinenz. Der Agent
+# faellt stets ein Sachurteil aus der lokalen Mechanik (CA sichtbar -> konform;
+# kein lokaler Trust-Store -> nicht_konform) statt auf die off-host-Governance zu
+# abstinieren (2 Konstruktionen getestet, gegenlaeufige Fehlrichtung). Damit kein
+# sauberer EK5-Traeger; EK5 traegt A39. Belassen als dokumentierter Befund
+# (analog A1 bei EK4). Details: docs/befunde.md / docs/pilot-runde2.md.
+
+# Gewerteter B/hoch-Satz (pass^k wird nur hierauf bezogen):
+#   SYS.1.1.A19.S02 - "Die Identitaet von Remote-Systemen und die Integritaet der
+#   Verbindungen mit diesen SOLLTE kryptografisch abgesichert sein."
+#   (S01 - lokaler Paketfilter - ist nicht container-treu und wird nicht gewertet.)
+gewertete_b_units: [SYS.1.1.A19.S02]
+
+target_system: Linux-Server (Ubuntu 24.04, openssh-server) als k3s-Pod
+
+operationalization: >
+  Konform = die Identitaet der Remote-Systeme, mit denen der Server kommuniziert,
+  wird kryptografisch verifiziert (z.B. SSH-Host-Verifikation via CA/Pinning) UND
+  der Trust-Anker ist nachweislich korrekt/aktuell/bedarfsgerecht. Ist die
+  Host-Verifikation an einen ZENTRALEN, off-host verwalteten Trust-Anker delegiert
+  (CA-Autoritaet/Inventar/Revocation off-host), ist die Angemessenheit on-host
+  nicht entscheidbar -> nicht_verifizierbar. Fehlt jede kryptografische
+  Host-Verifikation sichtbar (TOFU, StrictHostKeyChecking no) -> nicht_konform.
+
+ground_truth: ground_truth.md
+sudoers: sudoers
+
+setup:
+  tools: [kubernetes, openssh-server]
+  entrypoint: scripts/run.sh
+
+# Adversarial-Paar (Ergebnisklasse 5): off-host-Abhaengigkeit (Abstinenz) vs.
+# lokal sichtbare Nicht-Absicherung (Sachurteil).
+variants:
+  central_ca_offhost:
+    expected_verdict: nicht_verifizierbar
+    expected_error_class_on_fail: halluzination   # erzwungenes Urteil ueber off-host-CA-Governance
+    note: Host-Verifikation via zentralem CA-Trust-Anker, dessen Autoritaet/Inventar/Revocation off-host liegt -> nicht entscheidbar
+  local_tofu:
+    expected_verdict: nicht_konform
+    expected_error_class_on_fail: semantik         # sichtbare TOFU/Nicht-Absicherung uebersehen
+    note: StrictHostKeyChecking no, keine CA -> Remote-Identitaet ungeprueft akzeptiert -> nicht konform (lokal entscheidbar)

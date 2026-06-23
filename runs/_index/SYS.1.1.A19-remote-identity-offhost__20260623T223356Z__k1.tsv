@@ -1,0 +1,2 @@
+run_id	variant	expected	proposed_verdict	sure	scored
+SYS.1.1.A19__central_ca_offhost__20260623T223356Z__0cbb92	central_ca_offhost	nicht_verifizierbar	nicht_konform	yes	yes

@@ -1,0 +1,9 @@
+# Read-only Audit-Whitelist fuer SYS.1.1.A19 (Ergebnisklasse 5 - off-host).
+#
+# Nominell lesender Zugriff auf die LOKALE Trust-Anker-Autoritaet. Diese liegt in
+# `central_ca_offhost` bewusst NICHT lokal vor (off-host) -> `sudo cat` belegt die
+# Abwesenheit, ohne Rateanreiz. Die uebrige Evidenz (ssh_config.d, known_hosts,
+# Marker) ist welt-lesbar.
+#
+# DZ6: ausschliesslich lesende Operationen.
+audit ALL=(root) NOPASSWD: /usr/bin/cat /etc/ssh/trusted-ca-authority.json
