@@ -1,0 +1,2 @@
+run_id	variant	expected	proposed_verdict	sure	scored
+SYS.1.1.A2__compliant__20260623T223948Z__a2a42c	compliant	konform	nicht_konform	yes	yes

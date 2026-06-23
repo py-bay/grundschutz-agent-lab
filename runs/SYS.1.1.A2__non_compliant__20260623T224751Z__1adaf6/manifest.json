@@ -1,0 +1,37 @@
+{
+  "run_id": "SYS.1.1.A2__non_compliant__20260623T224751Z__1adaf6",
+  "scenario": "SYS.1.1.A2-authpolicy-synthesis",
+  "requirement_id": "SYS.1.1.A2",
+  "module_id": "SYS.1.1",
+  "category": "B",
+  "ergebnisklasse": "3_zu_komplex",
+  "variant": "non_compliant",
+  "expected_verdict": "nicht_konform",
+  "expected_compliant": false,
+  "ground_truth_sha256": "4939a613c2eb2dd164e71473e4ff6fd7f01b9b209a50122d136e68374a061547",
+  "prompt_sha256": "5e0307231a18a356c14027d158bceb9068fcfdc595d7a9898ade5d0d5db53b13",
+  "state_sha256": "18b43aea34e7759f62027b06455416aa28e5466570aa3fb64d2c8d0cb949a07f",
+  "sudoers_sha256": "bb6aab8fbf137c90f781c6623443f5fea7f3aec52f639016f999d9598c51be91",
+  "image": "ubuntu:24.04",
+  "namespace": "grundschutz-lab",
+  "pod_name": "target-non-compliant-1adaf6",
+  "configmap_name": "scenario-non-compliant-1adaf6",
+  "secret_name": "authkeys-non-compliant-1adaf6",
+  "run_id_label": "SYS.1.1.A2__non_compliant__20260623T224751Z__1adaf6",
+  "node_selector": "role=lab",
+  "ssh": {
+    "host": "127.0.0.1",
+    "port": 12222,
+    "user": "audit",
+    "private_key": "runs/SYS.1.1.A2__non_compliant__20260623T224751Z__1adaf6/ssh/id_ed25519"
+  },
+  "otel_resource_attributes": "run.id=SYS.1.1.A2__non_compliant__20260623T224751Z__1adaf6,scenario=SYS.1.1.A2-authpolicy-synthesis,variant=non_compliant,requirement.id=SYS.1.1.A2,ergebnisklasse=3_zu_komplex",
+  "created_utc": "20260623T224751Z",
+  "phase": "done",
+  "agent": {
+    "verdict": "nicht_konform",
+    "passed": true,
+    "notes": "auto-extrahiert (run_item.sh)",
+    "ended_utc": "20260623T225208Z"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "run_id": "SYS.1.1.A19__central_ca_offhost__20260623T222725Z__465dcc",
+  "scenario": "SYS.1.1.A19-remote-identity-offhost",
+  "requirement_id": "SYS.1.1.A19",
+  "module_id": "SYS.1.1",
+  "category": "B",
+  "ergebnisklasse": "5_nicht_entscheidbar",
+  "variant": "central_ca_offhost",
+  "expected_verdict": "nicht_verifizierbar",
+  "expected_compliant": null,
+  "ground_truth_sha256": "5509caf36c31ba00df9e5b0941759801a05358fd979d438f5d96ff22480cca36",
+  "prompt_sha256": "68b2b25715f5741addac7a64e0c931341c17d5ea3a7aa1de92aaa338b6b237f5",
+  "state_sha256": "ca3687aacafaba25bab55c6453739e80b64f927c14bfe61dd5956d6a0c2ee5ab",
+  "sudoers_sha256": "a34f1dc1a9f78282d8bd1eb743af3f58ecd5a044027ff995e45882237b8577ef",
+  "image": "ubuntu:24.04",
+  "namespace": "grundschutz-lab",
+  "pod_name": "target-central-ca-offhost-465dcc",
+  "configmap_name": "scenario-central-ca-offhost-465dcc",
+  "secret_name": "authkeys-central-ca-offhost-465dcc",
+  "run_id_label": "SYS.1.1.A19__central_ca_offhost__20260623T222725Z__465dcc",
+  "node_selector": "role=lab",
+  "ssh": {
+    "host": "127.0.0.1",
+    "port": 12222,
+    "user": "audit",
+    "private_key": "runs/SYS.1.1.A19__central_ca_offhost__20260623T222725Z__465dcc/ssh/id_ed25519"
+  },
+  "otel_resource_attributes": "run.id=SYS.1.1.A19__central_ca_offhost__20260623T222725Z__465dcc,scenario=SYS.1.1.A19-remote-identity-offhost,variant=central_ca_offhost,requirement.id=SYS.1.1.A19,ergebnisklasse=5_nicht_entscheidbar",
+  "created_utc": "20260623T222725Z",
+  "phase": "done",
+  "agent": {
+    "verdict": "konform",
+    "passed": false,
+    "notes": "auto-extrahiert (run_item.sh)",
+    "ended_utc": "20260623T223138Z"
+  }
+}

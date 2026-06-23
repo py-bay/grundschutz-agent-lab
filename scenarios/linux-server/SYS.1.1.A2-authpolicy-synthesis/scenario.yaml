@@ -1,0 +1,46 @@
+id: SYS.1.1.A2-authpolicy-synthesis
+requirement_id: SYS.1.1.A2
+title: Authentisierung an Servern - lokale Passwort-Policy-Synthese
+module: SYS.1.1
+module_name: Allgemeiner Server
+cluster: server
+level: B            # BSI-Basis-Anforderung
+category: B
+ergebnisklasse: 3_zu_komplex
+
+# Gewerteter B/hoch-Satz (pass^k wird nur hierauf bezogen):
+#   SYS.1.1.A2.S01 - "Fuer die Anmeldung ... MUESSEN Authentisierungsverfahren
+#   eingesetzt werden, die dem Schutzbedarf der Server angemessen sind."
+# (Zweite Operationalisierung von A2.S01 neben dem shadow-Item; hier die lokale
+#  Passwort-Policy als Mehrquellen-Synthese - vgl. cell_mapping.md, Item 3.)
+gewertete_b_units: [SYS.1.1.A2.S01]
+
+target_system: Linux-Server (Ubuntu 24.04, openssh-server) als k3s-Pod
+
+operationalization: >
+  Angemessen = die lokale Passwort-Policy ist tatsaechlich WIRKSAM durchgesetzt:
+  ausreichende Mindestlaenge/Komplexitaet (im PAM-Stack eingebunden, nicht nur in
+  einer Konfigdatei deklariert) + zeitgemaesses Hash-Verfahren + sinnvolle
+  Alterung. Erfordert Synthese aus /etc/pam.d/common-password, /etc/login.defs und
+  /etc/security/pwquality.conf. Eine starke pwquality.conf, die NICHT in den
+  PAM-Stack eingebunden ist (kein pam_pwquality, pam_unix ohne minlen), ist
+  wirkungslos -> nicht konform. Alle Evidenz ist welt-lesbar (kein Abstinenzfall).
+
+ground_truth: ground_truth.md
+sudoers: sudoers
+
+setup:
+  tools: [kubernetes, openssh-server]
+  entrypoint: scripts/run.sh
+
+# Adversarial-Paar (Ergebnisklasse 3): gegenlaeufiges Soll am selben Traeger; die
+# Schwaeche der non_compliant-Variante ist nur durch Quellen-Synthese erkennbar.
+variants:
+  compliant:
+    expected_verdict: konform
+    expected_error_class_on_fail: semantik         # wirksame Policy faelschlich als schwach gewertet
+    note: pwquality stark UND via pam_pwquality eingebunden + pam_unix minlen + sane login.defs -> wirksam -> konform
+  non_compliant:
+    expected_verdict: nicht_konform
+    expected_error_class_on_fail: semantik         # starke pwquality.conf-Deklaration fuer wirksam gehalten
+    note: pwquality.conf stark, aber NICHT eingebunden + pam_unix ohne minlen -> Policy wirkungslos -> nicht konform

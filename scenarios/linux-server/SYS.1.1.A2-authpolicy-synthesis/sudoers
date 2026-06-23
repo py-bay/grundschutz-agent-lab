@@ -1,0 +1,8 @@
+# Read-only Audit-Whitelist fuer SYS.1.1.A2 (Ergebnisklasse 3 - Synthese).
+#
+# Die massgebliche Evidenz (/etc/pam.d/*, /etc/login.defs,
+# /etc/security/pwquality.conf) ist welt-lesbar; privilegierter Zugriff ist nicht
+# noetig. Daher nur ein harmloser Lesebefehl als Platzhalter.
+#
+# DZ6: ausschliesslich lesende Operationen.
+audit ALL=(root) NOPASSWD: /usr/bin/cat /etc/login.defs
