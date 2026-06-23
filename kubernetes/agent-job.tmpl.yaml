@@ -75,6 +75,9 @@ spec:
               value: "1"
             - name: OTEL_LOG_TOOL_CONTENT
               value: "1"
+            # Modell-Pin (DZ5/DZ9). Wird von run.sh entfernt, wenn AGENT_MODEL leer ist.
+            - name: ANTHROPIC_MODEL
+              value: "${AGENT_MODEL}"
           resources:
             requests: { cpu: "100m", memory: "256Mi" }
             limits: { cpu: "1", memory: "1Gi" }
