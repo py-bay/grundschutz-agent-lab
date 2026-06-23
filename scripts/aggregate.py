@@ -203,12 +203,12 @@ def main():
               + ", ".join(r["run_id"] for r in incomplete))
 
     print("\n== pass^k je (Anforderung x Variante x Ergebnisklasse) ==")
-    print(f"{'Anforderung':<14}{'Variante':<14}{'EK':<24}{'Soll':<20}"
+    print(f"{'Anforderung':<14}{'Variante':<17}{'EK':<24}{'Soll':<20}"
           f"{'n':>3}{'gew':>4}{'pass':>5}{'rate':>6}  pass^k  Urteile")
     passk_rows = group_passk(runs, args.k)
     for row in passk_rows:
         verd = ",".join(f"{v}:{n}" for v, n in sorted(row["verdicts"].items()))
-        print(f"{row['requirement']:<14}{row['variant']:<14}{row['ergebnisklasse']:<24}"
+        print(f"{row['requirement']:<14}{row['variant']:<17}{row['ergebnisklasse']:<24}"
               f"{str(row['expected']):<20}{row['n']:>3}{row['scored']:>4}{row['passed']:>5}"
               f"{fmt_pct(row['pass_rate']):>6}  {'JA' if row['passk_strict'] else '-':<6}  {verd}")
 
