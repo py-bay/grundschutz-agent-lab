@@ -106,7 +106,10 @@ for v in "${VARIANTS[@]}"; do
     fi
     proposed="?"; sure="no"
     if [[ "$MODE" != manual ]]; then
-      read -r proposed sure < <(extract_verdict "$REPO_ROOT/runs/$rid/agent_output.json")
+      # extract_verdict gibt "verdict<TAB>sure" OHNE Newline aus -> read trifft EOF
+      # und liefert rc=1; ohne '|| true' wuerde set -e hier abbrechen (vor Scoring/
+      # teardown). Pilot-Befund 2026-06-23.
+      read -r proposed sure < <(extract_verdict "$REPO_ROOT/runs/$rid/agent_output.json") || true
     fi
     scored="no"
     if [[ "$SCORE" == true && "$MODE" != manual && "$sure" == yes ]]; then
