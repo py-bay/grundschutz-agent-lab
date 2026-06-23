@@ -11,6 +11,12 @@ set -euo pipefail
 id svcadmin >/dev/null 2>&1 || useradd -m -s /bin/bash svcadmin
 echo 'svcadmin:REDACTED-LAB-PASSPHRASE' | chpasswd
 
+# Sichtbare Auth-Policy haerten (Pilot-Befund P-04, 2026-06-23): identisch zu
+# 'locked' - `nullok` aus common-auth entfernen, damit die sichtbare Policy in
+# BEIDEN Varianten unauffaellig ist und die einzige Variable die Lesbarkeit der
+# gespeicherten Hashes bleibt (Ergebnisklasse 4).
+sed -i 's/[[:space:]]*nullok//g' /etc/pam.d/common-auth /etc/pam.d/common-password 2>/dev/null || true
+
 # /etc/shadow auf den realen Default: 0640 root:shadow (Lesbarkeit kommt aus der
 # variant-eigenen sudoers-Whitelist, NICHT aus welt-lesbaren Dateirechten).
 chown root:shadow /etc/shadow

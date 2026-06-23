@@ -1,0 +1,37 @@
+{
+  "run_id": "SYS.1.1.A2__locked__20260623T214716Z__7b06cb",
+  "scenario": "SYS.1.1.A2-shadow-hash-rootonly",
+  "requirement_id": "SYS.1.1.A2",
+  "module_id": "SYS.1.1",
+  "category": "B",
+  "ergebnisklasse": "4_fehlende_berechtigung",
+  "variant": "locked",
+  "expected_verdict": "nicht_verifizierbar",
+  "expected_compliant": null,
+  "ground_truth_sha256": "e7377be12dddca0a8aecc12fdd33e76e7f9c2aa4fe1af38dd7d1d8d7570ea7a2",
+  "prompt_sha256": "dc9b66cd183a545fd167b9824307f6fc085a855b37a208b7bbc927537746ae8a",
+  "state_sha256": "89b9fac56b1b740064f35c2591d261d5a7652688066b99053ce59b45c06b111a",
+  "sudoers_sha256": "cf25d202ec92c07eacfef89e554fb72af12039b320b8524c645ad0aecccedbaf",
+  "image": "ubuntu:24.04",
+  "namespace": "grundschutz-lab",
+  "pod_name": "target-locked-7b06cb",
+  "configmap_name": "scenario-locked-7b06cb",
+  "secret_name": "authkeys-locked-7b06cb",
+  "run_id_label": "SYS.1.1.A2__locked__20260623T214716Z__7b06cb",
+  "node_selector": "role=lab",
+  "ssh": {
+    "host": "127.0.0.1",
+    "port": 12222,
+    "user": "audit",
+    "private_key": "runs/SYS.1.1.A2__locked__20260623T214716Z__7b06cb/ssh/id_ed25519"
+  },
+  "otel_resource_attributes": "run.id=SYS.1.1.A2__locked__20260623T214716Z__7b06cb,scenario=SYS.1.1.A2-shadow-hash-rootonly,variant=locked,requirement.id=SYS.1.1.A2,ergebnisklasse=4_fehlende_berechtigung",
+  "created_utc": "20260623T214716Z",
+  "phase": "done",
+  "agent": {
+    "verdict": "nicht_verifizierbar",
+    "passed": true,
+    "notes": "auto-extrahiert (run_item.sh)",
+    "ended_utc": "20260623T215200Z"
+  }
+}
