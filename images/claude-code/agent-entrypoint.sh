@@ -19,7 +19,20 @@ install -m 600 /etc/agent-key/id_ed25519 "$HOME/.ssh/id_ed25519"
 PROMPT="$(cat /etc/agent-prompt/check-prompt.md)"
 
 set +e
-claude -p "$PROMPT" --output-format json --allowedTools "Bash" >/tmp/out.json 2>/tmp/err.log
+# Summativer Lauf (DZ5/DZ9):
+#  - Modell-Pin via ANTHROPIC_MODEL (Env, Job-Template),
+#  - Hintergrund-/Small-Fast-Modell via ANTHROPIC_DEFAULT_HAIKU_MODEL (= Pin ->
+#    keine Haiku-Calls, modelUsage enthaelt nur den Pin),
+#  - Reasoning-Effort via --effort (Hauptlauf-Setzung: high),
+#  - Permissions: --dangerously-skip-permissions (headless/unbeaufsichtigt; das
+#    Target ist read-only durch die sudoers-Whitelist, daher vertretbar).
+# HINWEIS: exakte Flag-Namen (--effort / --dangerously-skip-permissions) vor dem
+# Image-Rebuild mit 'claude --help' der gepinnten CLI-Version gegenpruefen.
+claude -p "$PROMPT" \
+  --output-format json \
+  --effort "${AGENT_EFFORT:-high}" \
+  --dangerously-skip-permissions \
+  >/tmp/out.json 2>/tmp/err.log
 rc=$?
 set -e
 

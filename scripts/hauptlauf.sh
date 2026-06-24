@@ -32,7 +32,8 @@ ITEMS=(
 )
 
 info "=== HAUPTLAUF  k=$K  Items=${#ITEMS[@]} ==="
-info "Modell : ${AGENT_MODEL:-<CLI-DEFAULT!>}"
+info "Modell : ${AGENT_MODEL:-<CLI-DEFAULT!>}  (Hintergrund/Haiku = ${AGENT_MODEL:-<CLI-DEFAULT!>})"
+info "Effort : ${AGENT_EFFORT}   Permissions: --dangerously-skip-permissions (Bypass)"
 info "Image  : Target=${IMAGE}  Agent=${AGENT_IMAGE}"
 if [[ -z "${AGENT_MODEL:-}" ]]; then
   info "WARNUNG: AGENT_MODEL nicht gesetzt -> CLI-Default-Modell (im Pilot Sonnet/Haiku-Mix),"

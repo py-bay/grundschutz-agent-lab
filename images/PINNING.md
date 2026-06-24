@@ -66,21 +66,32 @@ scripts/run_item.sh <scenario-id> --k 4 --mode agent-incluster
 > apt-at-runtime annimmt, vor dem Hauptlauf den Bootstrap auf „Image bringt alles
 > mit" umstellen (`kubernetes/target-pod.tmpl.yaml`).
 
-## 5. Modell-Pinning (separate DZ5-Stellschraube!)
+## 5. Modell-, Hintergrundmodell-, Effort- & Permission-Pin (separate DZ5-Stellschrauben!)
 
-Das Image pinnt die **claude-code-CLI**, **nicht das Modell**. `agent-entrypoint.sh`
-ruft `claude -p` ohne festes Modell — die CLI-Default-Auswahl kann driften. Für
-DZ5 das Modell **explizit** fixieren, z. B. im Agent-Job/Entrypoint:
+Das Image pinnt die **claude-code-CLI**, **nicht** das Modell — die Laufzeit-Pins
+sind davon getrennt. Setzung für den Hauptlauf (festgelegt 2026-06):
 
-```bash
-claude -p "$PROMPT" --model claude-opus-4-7-<snapshot> --output-format json --allowedTools Bash
-# oder per Umgebungsvariable ANTHROPIC_MODEL=<snapshot>
-```
+| Stellschraube | Setzung | Mechanik |
+|---|---|---|
+| Hauptmodell | `claude-opus-4-8` | Env `ANTHROPIC_MODEL` (run.sh → Job-Template) |
+| Hintergrund-/Small-Fast-Modell | `claude-opus-4-8` | Env `ANTHROPIC_DEFAULT_HAIKU_MODEL` (= Pin). Ohne dies nutzt Claude Code **Haiku 4.5** für Titel/Hintergrund → taucht im `modelUsage` auf (Pilot-Befund). Löst `ANTHROPIC_SMALL_FAST_MODEL` ab. |
+| Reasoning-Effort | `high` | `claude -p --effort` (Entrypoint), Env `AGENT_EFFORT` (lib.sh-Default `high`) |
+| Permissions | Bypass | `claude -p --dangerously-skip-permissions` (Entrypoint); Target bleibt read-only via sudoers-Whitelist |
 
-Thesis-Setzung: **Claude Opus 4.7, Temperatur 0**, fester Snapshot über die
-Lab-Dauer. Den konkreten Modell-Snapshot hier protokollieren und im Manifest/Lauf
-sichtbar machen (Provenienz). Temperatur 0 ist im headless-`-p`-Modus die
-Vorgabe; falls steuerbar, explizit setzen.
+**Wichtig — keine Temperatur:** Opus 4.8/4.7 **entfernen** `temperature`/`top_p`/
+`top_k`; die API quittiert sie mit **400**. Es gibt kein „Temperatur 0" mehr.
+Steuergröße ist stattdessen `effort` + adaptives Thinking. Die Rest-Stochastik
+ist **inhärent** — genau deshalb wird sie via **pass^k** gemessen statt per
+`temperature=0` wegparametrisiert (DZ5-Begründung).
+
+Es existiert **kein** datierter Snapshot für Opus 4.8 — `claude-opus-4-8` ist die
+kanonische ID. Reproduzierbarkeit ruht auf (a) Alias repointet nicht im Lab-Fenster
++ (b) gepinnter claude-code-Version (Image-Digest) + (c) den obigen Laufzeit-Pins.
+
+> Da der Entrypoint für effort/permission geändert wurde, ist ein **Agent-Image-
+> Rebuild + Push Pflicht** (Schritt 3) — fällt bequem mit dem Digest-Pinning zusammen.
+> Exakte Flag-Namen (`--effort`, `--dangerously-skip-permissions`) vor dem Rebuild
+> mit `claude --help` der gepinnten CLI-Version gegenprüfen.
 
 ## Gepinnte Werte (Protokoll — vor dem Hauptlauf ausfüllen)
 
@@ -91,4 +102,7 @@ Vorgabe; falls steuerbar, explizit setzen.
 | claude-code | Version `______` | |
 | ubuntu-sshd push | `@sha256:________` | |
 | claude-code push | `@sha256:________` | |
-| Modell-Snapshot | `claude-opus-4-7-________` | |
+| Hauptmodell | `claude-opus-4-8` (Alias, kein dat. Snapshot) | |
+| Hintergrundmodell | `claude-opus-4-8` (`ANTHROPIC_DEFAULT_HAIKU_MODEL`) | |
+| Effort | `high` (`--effort`) | |
+| Permissions | `--dangerously-skip-permissions` | |
