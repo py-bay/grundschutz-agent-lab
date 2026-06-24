@@ -93,6 +93,13 @@ kanonische ID. Reproduzierbarkeit ruht auf (a) Alias repointet nicht im Lab-Fens
 > Exakte Flag-Namen (`--effort`, `--dangerously-skip-permissions`) vor dem Rebuild
 > mit `claude --help` der gepinnten CLI-Version gegenprüfen.
 
+> **Rest-apt (ehrliche Einordnung):** Das Target-Image pinnt OS-Basis + openssh/sudo.
+> Szenario-eigene Zusatzpakete (z. B. `libpam-pwquality` in SYS.1.1.A2-authpolicy)
+> installiert das jeweilige `setup.sh` weiter **per Laufzeit-apt** (wie im Pilot);
+> `target-pod.tmpl.yaml` führt dafür `apt-get update` immer aus. Basis gepinnt,
+> Zusatzpakete sind ein minimaler, dokumentierter Rest-Drift — nicht bit-genau.
+> (Für echtes Pinning müssten diese Pakete ins `images/ubuntu-sshd`-Dockerfile.)
+
 ## Gepinnte Werte (Protokoll — vor dem Hauptlauf ausfüllen)
 
 | Artefakt | Pin | Aufgelöst am |
