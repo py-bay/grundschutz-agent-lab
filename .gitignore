@@ -16,3 +16,4 @@ runs/*/stage/
 # Bewusst NICHT ignoriert (= versionierter Forschungs-Record):
 #   runs/*/manifest.json, runs/*/agent_output.json, runs/*/transcript.jsonl,
 #   runs/*/FINDING.md
+runs/_hauptlauf/

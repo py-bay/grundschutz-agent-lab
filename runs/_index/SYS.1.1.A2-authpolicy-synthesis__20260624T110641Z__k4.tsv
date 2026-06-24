@@ -1,0 +1,9 @@
+run_id	variant	expected	proposed_verdict	sure	scored
+SYS.1.1.A2__compliant__20260624T110641Z__67cd93	compliant	konform	nicht_konform	yes	yes
+SYS.1.1.A2__compliant__20260624T111043Z__69e538	compliant	konform	nicht_konform	yes	yes
+SYS.1.1.A2__compliant__20260624T111408Z__e76eb9	compliant	konform	nicht_konform	yes	yes
+SYS.1.1.A2__compliant__20260624T111720Z__9fb950	compliant	konform	nicht_konform	yes	yes
+SYS.1.1.A2__non_compliant__20260624T112057Z__75d2e2	non_compliant	nicht_konform	nicht_konform	yes	yes
+SYS.1.1.A2__non_compliant__20260624T112254Z__2b6d30	non_compliant	nicht_konform	nicht_konform	yes	yes
+SYS.1.1.A2__non_compliant__20260624T112501Z__3e6e4e	non_compliant	nicht_konform	nicht_konform	yes	yes
+SYS.1.1.A2__non_compliant__20260624T112657Z__8d0bfe	non_compliant	nicht_konform	nicht_konform	yes	yes
