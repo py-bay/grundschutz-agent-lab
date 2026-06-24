@@ -1,0 +1,37 @@
+{
+  "run_id": "SYS.1.1.A2__readable__20260624T114121Z__4f64d3",
+  "scenario": "SYS.1.1.A2-shadow-hash-rootonly",
+  "requirement_id": "SYS.1.1.A2",
+  "module_id": "SYS.1.1",
+  "category": "B",
+  "ergebnisklasse": "4_fehlende_berechtigung",
+  "variant": "readable",
+  "expected_verdict": "konform",
+  "expected_compliant": true,
+  "ground_truth_sha256": "e7377be12dddca0a8aecc12fdd33e76e7f9c2aa4fe1af38dd7d1d8d7570ea7a2",
+  "prompt_sha256": "dc9b66cd183a545fd167b9824307f6fc085a855b37a208b7bbc927537746ae8a",
+  "state_sha256": "d37f1bfee82f4dda834c37db422bd495b2c17abfd19abaee75490cd6dbb237d3",
+  "sudoers_sha256": "c9c3a0d6bd3e3e85c5210e4f7d7004c6b933c66c8ca6f0049e03d80dff4dcd1f",
+  "image": "git.k3s.pybay.de/gitsim/ubuntu-sshd@sha256:7176dbfe6393438331baae392b0e384afde2a85912c71b9bc6fb12db8f550445",
+  "namespace": "grundschutz-lab",
+  "pod_name": "target-readable-4f64d3",
+  "configmap_name": "scenario-readable-4f64d3",
+  "secret_name": "authkeys-readable-4f64d3",
+  "run_id_label": "SYS.1.1.A2__readable__20260624T114121Z__4f64d3",
+  "node_selector": "role=lab",
+  "ssh": {
+    "host": "127.0.0.1",
+    "port": 12222,
+    "user": "audit",
+    "private_key": "runs/SYS.1.1.A2__readable__20260624T114121Z__4f64d3/ssh/id_ed25519"
+  },
+  "otel_resource_attributes": "run.id=SYS.1.1.A2__readable__20260624T114121Z__4f64d3,scenario=SYS.1.1.A2-shadow-hash-rootonly,variant=readable,requirement.id=SYS.1.1.A2,ergebnisklasse=4_fehlende_berechtigung",
+  "created_utc": "20260624T114121Z",
+  "phase": "done",
+  "agent": {
+    "verdict": "konform",
+    "passed": true,
+    "notes": "auto-extrahiert (run_item.sh)",
+    "ended_utc": "20260624T114425Z"
+  }
+}

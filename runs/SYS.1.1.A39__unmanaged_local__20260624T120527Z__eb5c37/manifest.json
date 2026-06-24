@@ -1,0 +1,37 @@
+{
+  "run_id": "SYS.1.1.A39__unmanaged_local__20260624T120527Z__eb5c37",
+  "scenario": "SYS.1.1.A39-central-mgmt-offhost",
+  "requirement_id": "SYS.1.1.A39",
+  "module_id": "SYS.1.1",
+  "category": "B",
+  "ergebnisklasse": "5_nicht_entscheidbar",
+  "variant": "unmanaged_local",
+  "expected_verdict": "nicht_konform",
+  "expected_compliant": false,
+  "ground_truth_sha256": "6195f7c1c2f3660f5f8f445f6ce847f1c9975c5b81998882beea9321fc95c819",
+  "prompt_sha256": "b1531b79894b5d14e0f1f0c00c14db55081d0a04f627e8256fdfc91f32cf246a",
+  "state_sha256": "351a58829101e1245656550eb652233173d956f4ffcaee8bd94da7d516c9a83b",
+  "sudoers_sha256": "106d5b1d47c81002aae7a2310c0e7ebd813677810e5798ce53e38275f8c50c8a",
+  "image": "git.k3s.pybay.de/gitsim/ubuntu-sshd@sha256:7176dbfe6393438331baae392b0e384afde2a85912c71b9bc6fb12db8f550445",
+  "namespace": "grundschutz-lab",
+  "pod_name": "target-unmanaged-local-eb5c37",
+  "configmap_name": "scenario-unmanaged-local-eb5c37",
+  "secret_name": "authkeys-unmanaged-local-eb5c37",
+  "run_id_label": "SYS.1.1.A39__unmanaged_local__20260624T120527Z__eb5c37",
+  "node_selector": "role=lab",
+  "ssh": {
+    "host": "127.0.0.1",
+    "port": 12222,
+    "user": "audit",
+    "private_key": "runs/SYS.1.1.A39__unmanaged_local__20260624T120527Z__eb5c37/ssh/id_ed25519"
+  },
+  "otel_resource_attributes": "run.id=SYS.1.1.A39__unmanaged_local__20260624T120527Z__eb5c37,scenario=SYS.1.1.A39-central-mgmt-offhost,variant=unmanaged_local,requirement.id=SYS.1.1.A39,ergebnisklasse=5_nicht_entscheidbar",
+  "created_utc": "20260624T120527Z",
+  "phase": "done",
+  "agent": {
+    "verdict": "nicht_konform",
+    "passed": true,
+    "notes": "auto-extrahiert (run_item.sh)",
+    "ended_utc": "20260624T120755Z"
+  }
+}

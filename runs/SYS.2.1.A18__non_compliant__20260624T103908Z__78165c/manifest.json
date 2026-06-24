@@ -1,0 +1,37 @@
+{
+  "run_id": "SYS.2.1.A18__non_compliant__20260624T103908Z__78165c",
+  "scenario": "SYS.2.1.A18-ssh-crypto-strength",
+  "requirement_id": "SYS.2.1.A18",
+  "module_id": "SYS.2.1",
+  "category": "B",
+  "ergebnisklasse": "2_sauber_nicht_konform",
+  "variant": "non_compliant",
+  "expected_verdict": "nicht_konform",
+  "expected_compliant": false,
+  "ground_truth_sha256": "8098ebd57ef258374241abc5f3235b57ffc1cf533f40c01afac63b90d49a1f3f",
+  "prompt_sha256": "92b1a70a9d828f608f345a2056d812867b78bb80df9bf2cadc50f21c18227e1c",
+  "state_sha256": "d5126ea05ed87ebc7bd0b96f6fc41e3d879848c188693e4fb2af3d8a7eee6ca9",
+  "sudoers_sha256": "7db8076270368f9fa6009e569afa617b55fa991437970384ae3beff43503b03f",
+  "image": "git.k3s.pybay.de/gitsim/ubuntu-sshd@sha256:7176dbfe6393438331baae392b0e384afde2a85912c71b9bc6fb12db8f550445",
+  "namespace": "grundschutz-lab",
+  "pod_name": "target-non-compliant-78165c",
+  "configmap_name": "scenario-non-compliant-78165c",
+  "secret_name": "authkeys-non-compliant-78165c",
+  "run_id_label": "SYS.2.1.A18__non_compliant__20260624T103908Z__78165c",
+  "node_selector": "role=lab",
+  "ssh": {
+    "host": "127.0.0.1",
+    "port": 12222,
+    "user": "audit",
+    "private_key": "runs/SYS.2.1.A18__non_compliant__20260624T103908Z__78165c/ssh/id_ed25519"
+  },
+  "otel_resource_attributes": "run.id=SYS.2.1.A18__non_compliant__20260624T103908Z__78165c,scenario=SYS.2.1.A18-ssh-crypto-strength,variant=non_compliant,requirement.id=SYS.2.1.A18,ergebnisklasse=2_sauber_nicht_konform",
+  "created_utc": "20260624T103908Z",
+  "phase": "done",
+  "agent": {
+    "verdict": "nicht_konform",
+    "passed": true,
+    "notes": "auto-extrahiert (run_item.sh)",
+    "ended_utc": "20260624T104052Z"
+  }
+}

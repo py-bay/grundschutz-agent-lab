@@ -1,0 +1,667 @@
+{
+  "filter": {
+    "requirement": null,
+    "scenario": null,
+    "ergebnisklasse": null
+  },
+  "counts": {
+    "runs": 40,
+    "scored": 40,
+    "with_verdict": 40,
+    "incomplete": 0
+  },
+  "passk": [
+    {
+      "requirement": "SYS.1.1.A2",
+      "variant": "compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "konform",
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "konform": 4
+      }
+    },
+    {
+      "requirement": "SYS.1.1.A2",
+      "variant": "locked",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "nicht_verifizierbar",
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "nicht_verifizierbar": 4
+      }
+    },
+    {
+      "requirement": "SYS.1.1.A2",
+      "variant": "non_compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "nicht_konform",
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "nicht_konform": 4
+      }
+    },
+    {
+      "requirement": "SYS.1.1.A2",
+      "variant": "readable",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "konform",
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "konform": 4
+      }
+    },
+    {
+      "requirement": "SYS.1.1.A33",
+      "variant": "compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "konform",
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "konform": 4
+      }
+    },
+    {
+      "requirement": "SYS.1.1.A33",
+      "variant": "non_compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "nicht_konform",
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "nicht_konform": 4
+      }
+    },
+    {
+      "requirement": "SYS.1.1.A39",
+      "variant": "central_offhost",
+      "ergebnisklasse": "5_nicht_entscheidbar",
+      "expected": "nicht_verifizierbar",
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "nicht_verifizierbar": 4
+      }
+    },
+    {
+      "requirement": "SYS.1.1.A39",
+      "variant": "unmanaged_local",
+      "ergebnisklasse": "5_nicht_entscheidbar",
+      "expected": "nicht_konform",
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "nicht_konform": 4
+      }
+    },
+    {
+      "requirement": "SYS.2.1.A18",
+      "variant": "compliant",
+      "ergebnisklasse": "1_sauber_konform",
+      "expected": "konform",
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "konform": 4
+      }
+    },
+    {
+      "requirement": "SYS.2.1.A18",
+      "variant": "non_compliant",
+      "ergebnisklasse": "2_sauber_nicht_konform",
+      "expected": "nicht_konform",
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "nicht_konform": 4
+      }
+    }
+  ],
+  "ergebnisklassen": {
+    "3_zu_komplex": {
+      "n": 16,
+      "scored": 16,
+      "passed": 16,
+      "abst": 0
+    },
+    "4_fehlende_berechtigung": {
+      "n": 8,
+      "scored": 8,
+      "passed": 8,
+      "abst": 4
+    },
+    "5_nicht_entscheidbar": {
+      "n": 8,
+      "scored": 8,
+      "passed": 8,
+      "abst": 4
+    },
+    "1_sauber_konform": {
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "abst": 0
+    },
+    "2_sauber_nicht_konform": {
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "abst": 0
+    }
+  },
+  "confusion": {
+    "konform": {
+      "konform": 16,
+      "nicht_konform": 0,
+      "nicht_verifizierbar": 0
+    },
+    "nicht_konform": {
+      "konform": 0,
+      "nicht_konform": 16,
+      "nicht_verifizierbar": 0
+    },
+    "nicht_verifizierbar": {
+      "konform": 0,
+      "nicht_konform": 0,
+      "nicht_verifizierbar": 8
+    }
+  },
+  "confusion_other": 0,
+  "telemetry": {
+    "cost_usd": {
+      "n": 40,
+      "mean": 0.4064992875,
+      "median": 0.40939875,
+      "min": 0.2871455,
+      "max": 0.6464825000000001,
+      "sum": 16.2599715
+    },
+    "num_turns": {
+      "n": 40,
+      "mean": 6.775,
+      "median": 6.0,
+      "min": 4,
+      "max": 11,
+      "sum": 271
+    },
+    "duration_ms": {
+      "n": 40,
+      "mean": 111272.5,
+      "median": 107785.5,
+      "min": 69529,
+      "max": 173672,
+      "sum": 4450900
+    },
+    "output_tokens": {
+      "n": 40,
+      "mean": 7423.775,
+      "median": 7595.0,
+      "min": 4724,
+      "max": 11920,
+      "sum": 296951
+    },
+    "input_tokens": {
+      "n": 40,
+      "mean": 2576.65,
+      "median": 2615.0,
+      "min": 2482,
+      "max": 2623,
+      "sum": 103066
+    },
+    "cache_read_tokens": {
+      "n": 40,
+      "mean": 126846.85,
+      "median": 120056.5,
+      "min": 72841,
+      "max": 219943,
+      "sum": 5073874
+    }
+  },
+  "runs": [
+    {
+      "run_id": "SYS.1.1.A2__compliant__20260624T121256Z__13a269",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__compliant__20260624T121523Z__ab79ba",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__compliant__20260624T121746Z__168d20",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__compliant__20260624T121950Z__106286",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__locked__20260624T112854Z__7cf516",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "locked",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__locked__20260624T113126Z__14a534",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "locked",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__locked__20260624T113408Z__b236f8",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "locked",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__locked__20260624T113647Z__f5471a",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "locked",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__non_compliant__20260624T122226Z__b2f692",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "non_compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__non_compliant__20260624T122415Z__ce7c99",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "non_compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__non_compliant__20260624T122629Z__b19643",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "non_compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__non_compliant__20260624T122841Z__b6790c",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "non_compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__readable__20260624T113911Z__a8fa74",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "readable",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__readable__20260624T114121Z__4f64d3",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "readable",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__readable__20260624T114429Z__dddb81",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "readable",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__readable__20260624T114710Z__689bee",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "readable",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A33__compliant__20260624T104615Z__27fd3d",
+      "requirement_id": "SYS.1.1.A33",
+      "variant": "compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A33__compliant__20260624T104901Z__8e9d17",
+      "requirement_id": "SYS.1.1.A33",
+      "variant": "compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A33__compliant__20260624T105225Z__45a8fa",
+      "requirement_id": "SYS.1.1.A33",
+      "variant": "compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A33__compliant__20260624T105524Z__e413f9",
+      "requirement_id": "SYS.1.1.A33",
+      "variant": "compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A33__non_compliant__20260624T105834Z__69ecab",
+      "requirement_id": "SYS.1.1.A33",
+      "variant": "non_compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A33__non_compliant__20260624T110029Z__4eb35d",
+      "requirement_id": "SYS.1.1.A33",
+      "variant": "non_compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A33__non_compliant__20260624T110235Z__3f03ea",
+      "requirement_id": "SYS.1.1.A33",
+      "variant": "non_compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A33__non_compliant__20260624T110421Z__83b6fd",
+      "requirement_id": "SYS.1.1.A33",
+      "variant": "non_compliant",
+      "ergebnisklasse": "3_zu_komplex",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A39__central_offhost__20260624T114912Z__46e8a7",
+      "requirement_id": "SYS.1.1.A39",
+      "variant": "central_offhost",
+      "ergebnisklasse": "5_nicht_entscheidbar",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A39__central_offhost__20260624T115215Z__fdc1dc",
+      "requirement_id": "SYS.1.1.A39",
+      "variant": "central_offhost",
+      "ergebnisklasse": "5_nicht_entscheidbar",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A39__central_offhost__20260624T115522Z__165973",
+      "requirement_id": "SYS.1.1.A39",
+      "variant": "central_offhost",
+      "ergebnisklasse": "5_nicht_entscheidbar",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A39__central_offhost__20260624T115739Z__1d1e96",
+      "requirement_id": "SYS.1.1.A39",
+      "variant": "central_offhost",
+      "ergebnisklasse": "5_nicht_entscheidbar",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A39__unmanaged_local__20260624T120012Z__81f90b",
+      "requirement_id": "SYS.1.1.A39",
+      "variant": "unmanaged_local",
+      "ergebnisklasse": "5_nicht_entscheidbar",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A39__unmanaged_local__20260624T120212Z__cf598b",
+      "requirement_id": "SYS.1.1.A39",
+      "variant": "unmanaged_local",
+      "ergebnisklasse": "5_nicht_entscheidbar",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A39__unmanaged_local__20260624T120527Z__eb5c37",
+      "requirement_id": "SYS.1.1.A39",
+      "variant": "unmanaged_local",
+      "ergebnisklasse": "5_nicht_entscheidbar",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A39__unmanaged_local__20260624T120800Z__187d11",
+      "requirement_id": "SYS.1.1.A39",
+      "variant": "unmanaged_local",
+      "ergebnisklasse": "5_nicht_entscheidbar",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__compliant__20260624T102227Z__3ae904",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "compliant",
+      "ergebnisklasse": "1_sauber_konform",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__compliant__20260624T102430Z__1cb98c",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "compliant",
+      "ergebnisklasse": "1_sauber_konform",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__compliant__20260624T102631Z__d89b95",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "compliant",
+      "ergebnisklasse": "1_sauber_konform",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__compliant__20260624T123050Z__50ac54",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "compliant",
+      "ergebnisklasse": "1_sauber_konform",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__non_compliant__20260624T103908Z__78165c",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "non_compliant",
+      "ergebnisklasse": "2_sauber_nicht_konform",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__non_compliant__20260624T104056Z__770202",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "non_compliant",
+      "ergebnisklasse": "2_sauber_nicht_konform",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__non_compliant__20260624T104238Z__a311b8",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "non_compliant",
+      "ergebnisklasse": "2_sauber_nicht_konform",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__non_compliant__20260624T104435Z__f19fcd",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "non_compliant",
+      "ergebnisklasse": "2_sauber_nicht_konform",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    }
+  ]
+}

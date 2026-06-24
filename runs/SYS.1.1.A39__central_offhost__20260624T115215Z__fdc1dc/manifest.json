@@ -1,0 +1,37 @@
+{
+  "run_id": "SYS.1.1.A39__central_offhost__20260624T115215Z__fdc1dc",
+  "scenario": "SYS.1.1.A39-central-mgmt-offhost",
+  "requirement_id": "SYS.1.1.A39",
+  "module_id": "SYS.1.1",
+  "category": "B",
+  "ergebnisklasse": "5_nicht_entscheidbar",
+  "variant": "central_offhost",
+  "expected_verdict": "nicht_verifizierbar",
+  "expected_compliant": null,
+  "ground_truth_sha256": "6195f7c1c2f3660f5f8f445f6ce847f1c9975c5b81998882beea9321fc95c819",
+  "prompt_sha256": "b1531b79894b5d14e0f1f0c00c14db55081d0a04f627e8256fdfc91f32cf246a",
+  "state_sha256": "ec5fefb2332c8b01997274b9ec842330d179372f7e3555ea3c62cbd276b14b07",
+  "sudoers_sha256": "106d5b1d47c81002aae7a2310c0e7ebd813677810e5798ce53e38275f8c50c8a",
+  "image": "git.k3s.pybay.de/gitsim/ubuntu-sshd@sha256:7176dbfe6393438331baae392b0e384afde2a85912c71b9bc6fb12db8f550445",
+  "namespace": "grundschutz-lab",
+  "pod_name": "target-central-offhost-fdc1dc",
+  "configmap_name": "scenario-central-offhost-fdc1dc",
+  "secret_name": "authkeys-central-offhost-fdc1dc",
+  "run_id_label": "SYS.1.1.A39__central_offhost__20260624T115215Z__fdc1dc",
+  "node_selector": "role=lab",
+  "ssh": {
+    "host": "127.0.0.1",
+    "port": 12222,
+    "user": "audit",
+    "private_key": "runs/SYS.1.1.A39__central_offhost__20260624T115215Z__fdc1dc/ssh/id_ed25519"
+  },
+  "otel_resource_attributes": "run.id=SYS.1.1.A39__central_offhost__20260624T115215Z__fdc1dc,scenario=SYS.1.1.A39-central-mgmt-offhost,variant=central_offhost,requirement.id=SYS.1.1.A39,ergebnisklasse=5_nicht_entscheidbar",
+  "created_utc": "20260624T115215Z",
+  "phase": "done",
+  "agent": {
+    "verdict": "nicht_verifizierbar",
+    "passed": true,
+    "notes": "auto-extrahiert (run_item.sh)",
+    "ended_utc": "20260624T115517Z"
+  }
+}

@@ -1,0 +1,9 @@
+run_id	variant	expected	proposed_verdict	sure	scored
+SYS.1.1.A39__central_offhost__20260624T114912Z__46e8a7	central_offhost	nicht_verifizierbar	nicht_verifizierbar	yes	yes
+SYS.1.1.A39__central_offhost__20260624T115215Z__fdc1dc	central_offhost	nicht_verifizierbar	nicht_verifizierbar	yes	yes
+SYS.1.1.A39__central_offhost__20260624T115522Z__165973	central_offhost	nicht_verifizierbar	nicht_verifizierbar	yes	yes
+SYS.1.1.A39__central_offhost__20260624T115739Z__1d1e96	central_offhost	nicht_verifizierbar	nicht_verifizierbar	yes	yes
+SYS.1.1.A39__unmanaged_local__20260624T120012Z__81f90b	unmanaged_local	nicht_konform	nicht_konform	yes	yes
+SYS.1.1.A39__unmanaged_local__20260624T120212Z__cf598b	unmanaged_local	nicht_konform	nicht_konform	yes	yes
+SYS.1.1.A39__unmanaged_local__20260624T120527Z__eb5c37	unmanaged_local	nicht_konform	nicht_konform	yes	yes
+SYS.1.1.A39__unmanaged_local__20260624T120800Z__187d11	unmanaged_local	nicht_konform	nicht_konform	yes	yes
