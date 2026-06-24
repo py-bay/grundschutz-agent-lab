@@ -78,6 +78,15 @@ spec:
             # Modell-Pin (DZ5/DZ9). Wird von run.sh entfernt, wenn AGENT_MODEL leer ist.
             - name: ANTHROPIC_MODEL
               value: "${AGENT_MODEL}"
+            # Hintergrund-/Small-Fast-Modell auf den Pin ziehen -> keine Haiku-Calls,
+            # modelUsage enthaelt nur den Pin (DZ5). Wird von run.sh mitentfernt, wenn
+            # AGENT_MODEL leer ist. (Loest ANTHROPIC_SMALL_FAST_MODEL ab.)
+            - name: ANTHROPIC_DEFAULT_HAIKU_MODEL
+              value: "${AGENT_MODEL}"
+            # Reasoning-Effort-Pin (DZ5). Vom Entrypoint als 'claude -p --effort'
+            # gesetzt; Default in lib.sh = high.
+            - name: AGENT_EFFORT
+              value: "${AGENT_EFFORT}"
           resources:
             requests: { cpu: "100m", memory: "256Mi" }
             limits: { cpu: "1", memory: "1Gi" }

@@ -263,12 +263,15 @@ if [[ "$AGENT_INCLUSTER" == true ]]; then
   $KUBECTL -n "$NAMESPACE" label --overwrite service "$TARGET_SVC" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
 
   # Agent-Job rendern + starten.
-  export JOB_NAME AGENT_IMAGE AGENT_MODEL AGENT_KEY_SECRET AGENT_PROMPT_CM OTEL_ATTRS REQ_ID_LABEL ERGEBNISKLASSE_LABEL
-  envsubst '${JOB_NAME} ${NAMESPACE} ${RUN_ID_LABEL} ${REQ_ID_LABEL} ${ERGEBNISKLASSE_LABEL} ${AGENT_IMAGE} ${AGENT_MODEL} ${AGENT_KEY_SECRET} ${AGENT_PROMPT_CM} ${OTEL_ATTRS}' \
+  export JOB_NAME AGENT_IMAGE AGENT_MODEL AGENT_EFFORT AGENT_KEY_SECRET AGENT_PROMPT_CM OTEL_ATTRS REQ_ID_LABEL ERGEBNISKLASSE_LABEL
+  envsubst '${JOB_NAME} ${NAMESPACE} ${RUN_ID_LABEL} ${REQ_ID_LABEL} ${ERGEBNISKLASSE_LABEL} ${AGENT_IMAGE} ${AGENT_MODEL} ${AGENT_EFFORT} ${AGENT_KEY_SECRET} ${AGENT_PROMPT_CM} ${OTEL_ATTRS}' \
     < "$REPO_ROOT/kubernetes/agent-job.tmpl.yaml" > "$RUN_DIR/agent-job.yaml"
-  # Modell-Pin optional: ohne AGENT_MODEL die ANTHROPIC_MODEL-Env-Zeilen entfernen
-  # (sonst liefe der Agent mit leerem Modellnamen). Mit AGENT_MODEL bleibt der Pin.
-  [[ -n "$AGENT_MODEL" ]] || sed -i '/name: ANTHROPIC_MODEL/,+1d' "$RUN_DIR/agent-job.yaml"
+  # Modell-Pin optional: ohne AGENT_MODEL die ANTHROPIC_MODEL- UND
+  # ANTHROPIC_DEFAULT_HAIKU_MODEL-Env-Zeilen entfernen (sonst liefe der Agent mit
+  # leerem Modellnamen). Mit AGENT_MODEL bleiben beide Pins. AGENT_EFFORT hat in
+  # lib.sh einen Default (high) und bleibt immer stehen.
+  [[ -n "$AGENT_MODEL" ]] || sed -i -e '/name: ANTHROPIC_MODEL/,+1d' \
+    -e '/name: ANTHROPIC_DEFAULT_HAIKU_MODEL/,+1d' "$RUN_DIR/agent-job.yaml"
   $KUBECTL apply -f "$RUN_DIR/agent-job.yaml" >/dev/null
   info "Agent-Job $JOB_NAME gestartet (Image $AGENT_IMAGE), warte auf Completion ..."
 

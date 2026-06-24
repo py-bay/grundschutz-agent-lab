@@ -12,6 +12,10 @@ AGENT_IMAGE="${AGENT_IMAGE:-git.k3s.pybay.de/gitsim/claude-code:latest}"
 # claude-CLI-Default (NICHT reproduzierbar, im Pilot ein Sonnet/Haiku-Mix). Fuer
 # den Hauptlauf pinnen, z.B. AGENT_MODEL=claude-opus-4-8 (s. images/PINNING.md).
 AGENT_MODEL="${AGENT_MODEL:-}"
+# Reasoning-Effort des Pruefagenten (DZ5: dokumentierter, gepinnter Parameter).
+# Im Entrypoint als 'claude -p --effort' gesetzt. Stufen: low|medium|high|xhigh|max.
+# Hauptlauf-Setzung: high (Claude-Code-Default fuer Opus 4.8).
+AGENT_EFFORT="${AGENT_EFFORT:-high}"
 
 # kubectl-Aufruf: auf dem Laptop "kubectl" (braucht KUBECONFIG/Tunnel),
 # direkt auf dem k3s-Node "k3s kubectl" (nutzt /etc/rancher/k3s/k3s.yaml
