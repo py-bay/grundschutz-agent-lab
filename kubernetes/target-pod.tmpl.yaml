@@ -44,8 +44,13 @@ spec:
         - |
           set -euo pipefail
           export DEBIAN_FRONTEND=noninteractive
-          apt-get update -qq
-          apt-get install -y -qq openssh-server sudo >/dev/null
+          # Gepinntes Image (images/ubuntu-sshd) bringt openssh-server/sudo/audit
+          # bereits mit -> apt nur als Fallback fuer bare ubuntu:24.04. So greift im
+          # Hauptlauf das gepinnte Image wirklich (kein apt-Drift, DZ5).
+          if [ ! -x /usr/sbin/sshd ]; then
+            apt-get update -qq
+            apt-get install -y -qq openssh-server sudo >/dev/null
+          fi
           id audit >/dev/null 2>&1 || useradd -m -s /bin/bash audit
           install -d -m 700 -o audit -g audit /home/audit/.ssh
           install -m 600 -o audit -g audit /etc/thesis-auth/authorized_keys /home/audit/.ssh/authorized_keys

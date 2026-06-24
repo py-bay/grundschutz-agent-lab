@@ -97,11 +97,11 @@ kanonische ID. Reproduzierbarkeit ruht auf (a) Alias repointet nicht im Lab-Fens
 
 | Artefakt | Pin | Aufgelöst am |
 |----------|-----|--------------|
-| ubuntu base | `ubuntu@sha256:________` | |
-| node base | `node@sha256:________` | |
-| claude-code | Version `______` | |
-| ubuntu-sshd push | `@sha256:________` | |
-| claude-code push | `@sha256:________` | |
+| ubuntu base | `ubuntu@sha256:786a8b558f7be160c6c8c4a54f9a57274f3b4fb1491cf65146521ae77ff1dc54` | 2026-06-24 |
+| node base | `node@sha256:813a7480f28fdadac1f7f5c824bcdad435b5bc1322a5968bbbdef8d058f9dff4` | 2026-06-24 |
+| claude-code | Version `2.1.187` | 2026-06-24 |
+| ubuntu-sshd push | `git.k3s.pybay.de/gitsim/ubuntu-sshd@sha256:7176dbfe6393438331baae392b0e384afde2a85912c71b9bc6fb12db8f550445` | 2026-06-24 |
+| claude-code push | `git.k3s.pybay.de/gitsim/claude-code@sha256:238800d5da35459be3f65668656107366aea0d10da52935d70e5030269bd4cda` | 2026-06-24 |
 | Hauptmodell | `claude-opus-4-8` (Alias, kein dat. Snapshot) | |
 | Hintergrundmodell | `claude-opus-4-8` (`ANTHROPIC_DEFAULT_HAIKU_MODEL`) | |
 | Effort | `high` (`--effort`) | |
