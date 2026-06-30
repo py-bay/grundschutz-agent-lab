@@ -27,13 +27,16 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 [[ $# -ge 1 ]] || die "Aufruf: run_item.sh <scenario-id> [--k N] [--mode ...] [--variants a,b] [--no-score]"
 SCENARIO="$1"; shift
-K=4; MODE="agent-incluster"; VARIANTS_CSV=""; SCORE=true
+K=4; MODE="agent-incluster"; VARIANTS_CSV=""; SCORE=true; TARGET=""; BACKEND=""; BASE_PORT=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --k) K="$2"; shift 2;;
     --mode) MODE="$2"; shift 2;;
     --variants) VARIANTS_CSV="$2"; shift 2;;
     --no-score) SCORE=false; shift;;
+    --target) TARGET="$2"; shift 2;;        # an run.sh durchreichen: k8s|docker
+    --backend) BACKEND="$2"; shift 2;;       # an run.sh durchreichen: claude|opencode
+    --port) BASE_PORT="$2"; shift 2;;        # Basis-Port (docker-Target); je Lauf +1
     *) die "unbekanntes Argument: $1";;
   esac
 done
@@ -47,6 +50,10 @@ case "$MODE" in
   manual)          RUN_FLAG="";;
   *) die "mode muss agent-incluster|agent|manual sein";;
 esac
+# Optionale Durchreich-Flags (DZ9-Lokal-Lauf: --target docker --backend opencode)
+EXTRA_FLAGS=()
+[[ -n "$TARGET" ]]  && EXTRA_FLAGS+=(--target "$TARGET")
+[[ -n "$BACKEND" ]] && EXTRA_FLAGS+=(--backend "$BACKEND")
 [[ "$MODE" != manual ]] || info "WARNUNG: mode=manual startet keinen Agenten - k-Wiederholung ohne Urteil/Scoring."
 
 # Varianten bestimmen: explizit (--variants) oder aus scenario.yaml (variants:-Block,
@@ -94,12 +101,16 @@ extract_verdict() {
   printf '%s' "$out"
 }
 
-PASS=0; FAIL=0; UNSURE=0; ERRORS=0
+PASS=0; FAIL=0; UNSURE=0; ERRORS=0; RUN_SEQ=0
 for v in "${VARIANTS[@]}"; do
   exp="$(sed -n 's/^EXPECTED_VERDICT=//p' "$SCEN_DIR/variants/$v/variant.env" 2>/dev/null | tr -d '"' | head -n1)"
   for ((i=1; i<=K; i++)); do
     info "[$SCENARIO/$v] Lauf $i/$K ..."
-    rid="$("$REPO_ROOT/scripts/run.sh" "$SCENARIO" "$v" ${RUN_FLAG:+$RUN_FLAG} 2>/dev/null | tail -n1)" || rid=""
+    # Pro Lauf eigener Port (docker-Target), damit parallele/aufeinanderfolgende
+    # Container nicht auf demselben Host-Port kollidieren.
+    PORT_FLAG=(); [[ -n "$BASE_PORT" ]] && PORT_FLAG=(--port "$((BASE_PORT + RUN_SEQ))")
+    RUN_SEQ=$((RUN_SEQ + 1))
+    rid="$("$REPO_ROOT/scripts/run.sh" "$SCENARIO" "$v" ${RUN_FLAG:+$RUN_FLAG} "${EXTRA_FLAGS[@]}" "${PORT_FLAG[@]}" 2>/dev/null | tail -n1)" || rid=""
     if [[ -z "$rid" ]]; then
       info "  run.sh lieferte keine run_id (Fehler/Preflight?) - uebersprungen, Pod ggf. zur Diagnose stehen geblieben."
       ERRORS=$((ERRORS+1)); continue

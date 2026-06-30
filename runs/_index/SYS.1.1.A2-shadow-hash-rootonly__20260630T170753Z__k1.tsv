@@ -1,0 +1,3 @@
+run_id	variant	expected	proposed_verdict	sure	scored
+SYS.1.1.A2__locked__20260630T170753Z__bce771	locked	nicht_verifizierbar	nicht_verifizierbar	yes	yes
+SYS.1.1.A2__readable__20260630T171131Z__da7352	readable	konform	konform	yes	yes

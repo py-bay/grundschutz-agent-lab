@@ -62,19 +62,27 @@ PY
   info "Urteil: $VERDICT | erwartet=$EXPECTED | passed=$PASSED"
 fi
 
-# Cluster-Objekte loeschen (Pod laeuft nicht weiter)
+# Ziel-Objekte loeschen (Target laeuft nicht weiter)
+jget() { sed -n "s/.*\"$1\":[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$MANIFEST" | head -n1; }
+TARGET="$(jget target)"; [[ -n "$TARGET" ]] || TARGET="k8s"   # alte Manifeste = k8s
 if [[ "$KEEP" == false ]]; then
-  jget() { sed -n "s/.*\"$1\":[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$MANIFEST" | head -n1; }
-  POD="$(jget pod_name)"; LABEL="$(jget run_id_label)"
-  [[ -n "$LABEL" ]] || LABEL="$(label_safe "$RUN_ID")"
-  $KUBECTL -n "$NAMESPACE" delete pod "$POD" --ignore-not-found >/dev/null 2>&1 || true
-  # Alle laufbezogenen Objekte ueber das run-id-Label: Target-Pod, Agent-Job
-  # (+ dessen Pods), Target-Service, Szenario-/Prompt-ConfigMaps, Key-/Auth-Secrets.
-  $KUBECTL -n "$NAMESPACE" delete pod,job,service,configmap,secret \
-    -l "thesis.pybay.de/run-id=$LABEL" --ignore-not-found >/dev/null 2>&1 || true
-  info "Lauf-Objekte abgeraeumt (Pod/Job/Service/ConfigMap/Secret ueber Label run-id=$LABEL)."
+  if [[ "$TARGET" == docker ]]; then
+    CONTAINER="$(jget container_name)"
+    [[ -n "$CONTAINER" ]] || CONTAINER="lab-target-$(label_safe "$RUN_ID")"
+    "$REPO_ROOT/scripts/target-docker.sh" down "$CONTAINER" || true
+    info "Lauf-Objekte abgeraeumt (docker-Target $CONTAINER entfernt)."
+  else
+    POD="$(jget pod_name)"; LABEL="$(jget run_id_label)"
+    [[ -n "$LABEL" ]] || LABEL="$(label_safe "$RUN_ID")"
+    $KUBECTL -n "$NAMESPACE" delete pod "$POD" --ignore-not-found >/dev/null 2>&1 || true
+    # Alle laufbezogenen Objekte ueber das run-id-Label: Target-Pod, Agent-Job
+    # (+ dessen Pods), Target-Service, Szenario-/Prompt-ConfigMaps, Key-/Auth-Secrets.
+    $KUBECTL -n "$NAMESPACE" delete pod,job,service,configmap,secret \
+      -l "thesis.pybay.de/run-id=$LABEL" --ignore-not-found >/dev/null 2>&1 || true
+    info "Lauf-Objekte abgeraeumt (Pod/Job/Service/ConfigMap/Secret ueber Label run-id=$LABEL)."
+  fi
 else
-  info "Pod bleibt stehen (--keep)."
+  info "Target bleibt stehen (--keep)."
 fi
 
 info "Manifest: $MANIFEST"

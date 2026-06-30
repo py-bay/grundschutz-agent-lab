@@ -1,0 +1,206 @@
+{
+  "filter": {
+    "requirement": null,
+    "scenario": null,
+    "ergebnisklasse": null,
+    "backend": "opencode"
+  },
+  "counts": {
+    "runs": 4,
+    "scored": 4,
+    "with_verdict": 4,
+    "incomplete": 0
+  },
+  "passk": [
+    {
+      "requirement": "SYS.1.1.A2",
+      "variant": "locked",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "nicht_verifizierbar",
+      "n": 1,
+      "scored": 1,
+      "passed": 1,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "nicht_verifizierbar": 1
+      }
+    },
+    {
+      "requirement": "SYS.1.1.A2",
+      "variant": "readable",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "konform",
+      "n": 1,
+      "scored": 1,
+      "passed": 1,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "konform": 1
+      }
+    },
+    {
+      "requirement": "SYS.2.1.A18",
+      "variant": "compliant",
+      "ergebnisklasse": "1_sauber_konform",
+      "expected": "konform",
+      "n": 1,
+      "scored": 1,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "passk_strict": false,
+      "k_target": 4,
+      "verdicts": {
+        "nicht_konform": 1
+      }
+    },
+    {
+      "requirement": "SYS.2.1.A18",
+      "variant": "non_compliant",
+      "ergebnisklasse": "2_sauber_nicht_konform",
+      "expected": "nicht_konform",
+      "n": 1,
+      "scored": 1,
+      "passed": 1,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "nicht_konform": 1
+      }
+    }
+  ],
+  "ergebnisklassen": {
+    "4_fehlende_berechtigung": {
+      "n": 2,
+      "scored": 2,
+      "passed": 2,
+      "abst": 1
+    },
+    "1_sauber_konform": {
+      "n": 1,
+      "scored": 1,
+      "passed": 0,
+      "abst": 0
+    },
+    "2_sauber_nicht_konform": {
+      "n": 1,
+      "scored": 1,
+      "passed": 1,
+      "abst": 0
+    }
+  },
+  "confusion": {
+    "konform": {
+      "konform": 1,
+      "nicht_konform": 1,
+      "nicht_verifizierbar": 0
+    },
+    "nicht_konform": {
+      "konform": 0,
+      "nicht_konform": 1,
+      "nicht_verifizierbar": 0
+    },
+    "nicht_verifizierbar": {
+      "konform": 0,
+      "nicht_konform": 0,
+      "nicht_verifizierbar": 1
+    }
+  },
+  "confusion_other": 0,
+  "telemetry": {
+    "cost_usd": {
+      "n": 4,
+      "mean": 0,
+      "median": 0.0,
+      "min": 0,
+      "max": 0,
+      "sum": 0
+    },
+    "num_turns": {
+      "n": 4,
+      "mean": 3.5,
+      "median": 3.5,
+      "min": 3,
+      "max": 4,
+      "sum": 14
+    },
+    "duration_ms": {
+      "n": 4,
+      "mean": 162653.75,
+      "median": 164729.0,
+      "min": 123076,
+      "max": 198081,
+      "sum": 650615
+    },
+    "output_tokens": {
+      "n": 4,
+      "mean": 1295.25,
+      "median": 1054.5,
+      "min": 940,
+      "max": 2132,
+      "sum": 5181
+    },
+    "input_tokens": {
+      "n": 4,
+      "mean": 8474,
+      "median": 8284.0,
+      "min": 8143,
+      "max": 9185,
+      "sum": 33896
+    },
+    "cache_read_tokens": {
+      "n": 4,
+      "mean": 0,
+      "median": 0.0,
+      "min": 0,
+      "max": 0,
+      "sum": 0
+    }
+  },
+  "runs": [
+    {
+      "run_id": "SYS.1.1.A2__locked__20260630T170753Z__bce771",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "locked",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__readable__20260630T171131Z__da7352",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "readable",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__compliant__20260630T171627Z__19b5b2",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "compliant",
+      "ergebnisklasse": "1_sauber_konform",
+      "expected": "konform",
+      "verdict": "nicht_konform",
+      "passed": false,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__non_compliant__20260630T171937Z__0749e6",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "non_compliant",
+      "ergebnisklasse": "2_sauber_nicht_konform",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    }
+  ]
+}

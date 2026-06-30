@@ -61,6 +61,10 @@ def load_runs(runs_dir, flt):
             "scenario": m.get("scenario", "?"),
             "variant": m.get("variant", "?"),
             "ergebnisklasse": ek,
+            # backend/target erst seit DZ9 im Manifest; alte Laeufe (claude/k8s)
+            # ohne Feld zaehlen als Default, damit der --backend-Filter sie findet.
+            "backend": m.get("backend", "claude"),
+            "target": m.get("target", "k8s"),
             "category": m.get("category", "?"),
             "expected": derive_expected(m),
             "phase": m.get("phase", "?"),
@@ -73,6 +77,8 @@ def load_runs(runs_dir, flt):
         if flt["scenario"] and rec["scenario"] != flt["scenario"]:
             continue
         if flt["ergebnisklasse"] and rec["ergebnisklasse"] != flt["ergebnisklasse"]:
+            continue
+        if flt.get("backend") and rec["backend"] != flt["backend"]:
             continue
         rec["telemetry"] = load_telemetry(rec["dir"])
         runs.append(rec)
@@ -181,12 +187,13 @@ def main():
     ap.add_argument("--requirement", default=None)
     ap.add_argument("--scenario", default=None)
     ap.add_argument("--ergebnisklasse", default=None)
+    ap.add_argument("--backend", default=None, help="nur Laeufe dieses Agenten: claude|opencode")
     ap.add_argument("--k", type=int, default=4)
     ap.add_argument("--json", default=None, help="Pfad fuer maschinenlesbare Ausgabe")
     args = ap.parse_args()
 
     flt = {"requirement": args.requirement, "scenario": args.scenario,
-           "ergebnisklasse": args.ergebnisklasse}
+           "ergebnisklasse": args.ergebnisklasse, "backend": args.backend}
     runs = load_runs(args.runs_dir, flt)
     if not runs:
         print("Keine passenden Laeufe gefunden.", file=sys.stderr)

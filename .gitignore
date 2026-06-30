@@ -12,8 +12,11 @@ runs/*/agent_stderr.log
 runs/*/agent_job.log
 runs/*/preflight.log
 runs/*/stage/
+runs/*/authkeys/
+runs/*/opencode_events.jsonl
 !runs/.gitkeep
 # Bewusst NICHT ignoriert (= versionierter Forschungs-Record):
 #   runs/*/manifest.json, runs/*/agent_output.json, runs/*/transcript.jsonl,
-#   runs/*/FINDING.md
+#   runs/*/FINDING.md  (transcript.jsonl ist die kanonische Kopie des
+#   opencode_events.jsonl-Rohstroms)
 runs/_hauptlauf/

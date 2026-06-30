@@ -29,17 +29,32 @@ SCENARIO="$1"; VARIANT="$2"; shift 2
 PORT=12222
 RUN_AGENT=false
 AGENT_INCLUSTER=false
+TARGET=k8s          # k8s (Hauptlauf, Pod) | docker (lokaler Container, DZ9-Souveraenitaetslauf)
+BACKEND=claude      # claude (Hauptlauf) | opencode (lokaler offener Agent, DZ9)
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --port) PORT="$2"; shift 2;;
     --agent) RUN_AGENT=true; shift;;                       # claude lokal auf dem Operator (Dev/Fallback)
     --agent-incluster) AGENT_INCLUSTER=true; RUN_AGENT=true; shift;;  # claude als k8s-Job (laptop-frei, Standard fuer den Hauptlauf)
+    --target) TARGET="$2"; shift 2;;                       # Ziel-Substrat: k8s|docker
+    --backend) BACKEND="$2"; RUN_AGENT=true; shift 2;;     # Pruefagent: claude|opencode (impliziert lokalen Agentenlauf)
     *) die "unbekanntes Argument: $1";;
   esac
 done
+case "$TARGET" in k8s|docker) :;; *) die "--target muss k8s|docker sein (war: $TARGET)";; esac
+case "$BACKEND" in claude|opencode) :;; *) die "--backend muss claude|opencode sein (war: $BACKEND)";; esac
+# opencode-Backend laeuft nur lokal (kein in-cluster-Job-Image); docker-Target nur lokal.
+[[ "$BACKEND" == opencode && "$AGENT_INCLUSTER" == true ]] && die "--backend opencode ist mit --agent-incluster nicht kombinierbar (opencode laeuft lokal)."
+[[ "$TARGET" == docker && "$AGENT_INCLUSTER" == true ]] && die "--target docker ist mit --agent-incluster nicht kombinierbar (kein Cluster)."
 
-need envsubst; need openssl; need ssh-keygen
-info "kubectl: $KUBECTL"
+need openssl; need ssh-keygen
+if [[ "$TARGET" == k8s ]]; then
+  need envsubst
+  info "kubectl: $KUBECTL"
+else
+  need docker
+  info "Target-Substrat: docker (lokaler Container, kein Cluster)"
+fi
 
 # Szenario aufloesen (unter scenarios/*/<id>/)
 SCEN_DIR="$(find "$REPO_ROOT/scenarios" -maxdepth 2 -type d -name "$SCENARIO" | head -n1)"
@@ -131,6 +146,7 @@ ssh-keygen -t ed25519 -N "" -C "audit@$RUN_ID" -f "$RUN_DIR/ssh/id_ed25519" >/de
 POD_NAME="target-$(sanitize "${VARIANT}-${RAND}")"
 CM_NAME="scenario-$(sanitize "${VARIANT}-${RAND}")"
 SECRET_NAME="authkeys-$(sanitize "${VARIANT}-${RAND}")"
+CONTAINER="lab-target-$(sanitize "${VARIANT}-${RAND}")"   # docker-Target dieses Laufs
 RUN_ID_LABEL="$(label_safe "$RUN_ID")"
 REQ_ID_LABEL="$(label_safe "$REQ_ID")"
 VARIANT_LABEL="$(label_safe "$VARIANT")"
@@ -142,28 +158,40 @@ OTEL_ATTRS="run.id=${RUN_ID},scenario=${SCENARIO},variant=${VARIANT},requirement
 
 info "Run-ID: $RUN_ID"
 info "Kategorie/Ergebnisklasse: $CATEGORY / $ERGEBNISKLASSE | erwartetes Urteil: $EXPECTED_VERDICT"
-info "Namespace/Pod: $NAMESPACE/$POD_NAME (node role=lab)"
 
-# --- Cluster-Objekte erzeugen ---
-$KUBECTL apply -f "$REPO_ROOT/kubernetes/namespace.yaml" >/dev/null
-$KUBECTL -n "$NAMESPACE" create configmap "$CM_NAME" --from-file="$STAGE" \
-  --dry-run=client -o yaml | $KUBECTL apply -f - >/dev/null
-$KUBECTL -n "$NAMESPACE" create secret generic "$SECRET_NAME" \
-  --from-file=authorized_keys="$RUN_DIR/ssh/id_ed25519.pub" \
-  --dry-run=client -o yaml | $KUBECTL apply -f - >/dev/null
-# run-id-Label, damit teardown.sh ConfigMap/Secret eindeutig wieder findet
-$KUBECTL -n "$NAMESPACE" label --overwrite configmap "$CM_NAME" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
-$KUBECTL -n "$NAMESPACE" label --overwrite secret "$SECRET_NAME" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
+if [[ "$TARGET" == k8s ]]; then
+  info "Namespace/Pod: $NAMESPACE/$POD_NAME (node role=lab)"
+  # --- Cluster-Objekte erzeugen ---
+  $KUBECTL apply -f "$REPO_ROOT/kubernetes/namespace.yaml" >/dev/null
+  $KUBECTL -n "$NAMESPACE" create configmap "$CM_NAME" --from-file="$STAGE" \
+    --dry-run=client -o yaml | $KUBECTL apply -f - >/dev/null
+  $KUBECTL -n "$NAMESPACE" create secret generic "$SECRET_NAME" \
+    --from-file=authorized_keys="$RUN_DIR/ssh/id_ed25519.pub" \
+    --dry-run=client -o yaml | $KUBECTL apply -f - >/dev/null
+  # run-id-Label, damit teardown.sh ConfigMap/Secret eindeutig wieder findet
+  $KUBECTL -n "$NAMESPACE" label --overwrite configmap "$CM_NAME" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
+  $KUBECTL -n "$NAMESPACE" label --overwrite secret "$SECRET_NAME" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
 
-export POD_NAME NAMESPACE IMAGE RUN_ID RUN_ID_LABEL SCENARIO REQ_ID REQ_ID_LABEL \
-       VARIANT VARIANT_LABEL ERGEBNISKLASSE_LABEL GT_HASH STATE_HASH CM_NAME SECRET_NAME
-envsubst '${POD_NAME} ${NAMESPACE} ${IMAGE} ${RUN_ID} ${RUN_ID_LABEL} ${SCENARIO} ${REQ_ID} ${REQ_ID_LABEL} ${VARIANT} ${VARIANT_LABEL} ${ERGEBNISKLASSE_LABEL} ${GT_HASH} ${STATE_HASH} ${CM_NAME} ${SECRET_NAME}' \
-  < "$REPO_ROOT/kubernetes/target-pod.tmpl.yaml" > "$RUN_DIR/pod.yaml"
-$KUBECTL apply -f "$RUN_DIR/pod.yaml" >/dev/null
+  export POD_NAME NAMESPACE IMAGE RUN_ID RUN_ID_LABEL SCENARIO REQ_ID REQ_ID_LABEL \
+         VARIANT VARIANT_LABEL ERGEBNISKLASSE_LABEL GT_HASH STATE_HASH CM_NAME SECRET_NAME
+  envsubst '${POD_NAME} ${NAMESPACE} ${IMAGE} ${RUN_ID} ${RUN_ID_LABEL} ${SCENARIO} ${REQ_ID} ${REQ_ID_LABEL} ${VARIANT} ${VARIANT_LABEL} ${ERGEBNISKLASSE_LABEL} ${GT_HASH} ${STATE_HASH} ${CM_NAME} ${SECRET_NAME}' \
+    < "$REPO_ROOT/kubernetes/target-pod.tmpl.yaml" > "$RUN_DIR/pod.yaml"
+  $KUBECTL apply -f "$RUN_DIR/pod.yaml" >/dev/null
 
-info "warte auf Pod Ready (apt install openssh-server + setup.sh laufen im Pod) ..."
-$KUBECTL -n "$NAMESPACE" wait --for=condition=Ready "pod/$POD_NAME" --timeout=300s \
-  || die "Pod nicht Ready - '$KUBECTL -n $NAMESPACE describe pod $POD_NAME' pruefen"
+  info "warte auf Pod Ready (apt install openssh-server + setup.sh laufen im Pod) ..."
+  $KUBECTL -n "$NAMESPACE" wait --for=condition=Ready "pod/$POD_NAME" --timeout=300s \
+    || die "Pod nicht Ready - '$KUBECTL -n $NAMESPACE describe pod $POD_NAME' pruefen"
+else
+  # --- Lokales Docker-Target (DZ9-Souveraenitaetslauf, Cluster nicht erreichbar) ---
+  # Inhaltlich identischer Bootstrap zum Pod (scripts/target-bootstrap.sh).
+  info "Target-Container: $CONTAINER (image $IMAGE), Port 127.0.0.1:$PORT -> 22"
+  mkdir -p "$RUN_DIR/authkeys"
+  cp "$RUN_DIR/ssh/id_ed25519.pub" "$RUN_DIR/authkeys/authorized_keys"  # nur der Pubkey kommt ins Target
+  "$REPO_ROOT/scripts/target-docker.sh" up \
+    "$STAGE" "$RUN_DIR/authkeys/authorized_keys" "$PORT" "$CONTAINER" "$IMAGE" \
+    "$VARIANT" "$ERGEBNISKLASSE_LABEL" "$RUN_ID" \
+    || die "Docker-Target nicht hochgekommen - 'docker logs $CONTAINER' pruefen | abraeumen: scripts/teardown.sh $RUN_ID"
+fi
 
 # --- Manifest (pre-committed) ---
 cat > "$RUN_DIR/manifest.json" <<JSON
@@ -182,6 +210,9 @@ cat > "$RUN_DIR/manifest.json" <<JSON
   "state_sha256": "$STATE_HASH",
   "sudoers_sha256": "$SUDOERS_HASH",
   "image": "$IMAGE",
+  "target": "$TARGET",
+  "backend": "$BACKEND",
+  "container_name": "$CONTAINER",
   "namespace": "$NAMESPACE",
   "pod_name": "$POD_NAME",
   "configmap_name": "$CM_NAME",
@@ -196,10 +227,12 @@ cat > "$RUN_DIR/manifest.json" <<JSON
 }
 JSON
 
-# --- Port-Forward im Hintergrund ---
-$KUBECTL -n "$NAMESPACE" port-forward "pod/$POD_NAME" "$PORT:22" >"$RUN_DIR/portforward.log" 2>&1 &
-echo $! > "$RUN_DIR/portforward.pid"
-sleep 2
+# --- Port-Forward im Hintergrund (nur k8s; das docker-Target publisht :22 direkt) ---
+if [[ "$TARGET" == k8s ]]; then
+  $KUBECTL -n "$NAMESPACE" port-forward "pod/$POD_NAME" "$PORT:22" >"$RUN_DIR/portforward.log" 2>&1 &
+  echo $! > "$RUN_DIR/portforward.pid"
+  sleep 2
+fi
 
 # --- Preflight: SSH-Login MUSS funktionieren, sonst ist der Lauf nicht auswertbar ---
 # Verhindert False Pass aus falschem Grund (Agent kommt nie auf den Host und
@@ -296,39 +329,82 @@ if [[ "$AGENT_INCLUSTER" == true ]]; then
   exit 0
 fi
 
-# --- Schicht 2b: Agent lokal auf dem Operator (Dev/Fallback, --agent) ---
+# --- Schicht 2b: Agent lokal auf dem Operator (Dev/Fallback, --agent / --backend) ---
 if [[ "$RUN_AGENT" == true ]]; then
-  if command -v claude >/dev/null 2>&1; then
-    # DZ2-Isolation: Agent laeuft in einem leeren Arbeitsverzeichnis AUSSERHALB
-    # des Repos; nur der private SSH-Key liegt dort. So kein Zugriff auf Ground
-    # Truth, Szenario-Dateien oder variant.env (das erwartete Urteil).
-    AGENT_CWD="$(mktemp -d "${TMPDIR:-/tmp}/lab-agent-XXXXXX")"
-    cp "$RUN_DIR/ssh/id_ed25519" "$AGENT_CWD/id_ed25519"
-    chmod 600 "$AGENT_CWD/id_ed25519"
-    AGENT_PROMPT="$(cat "$SCEN_DIR/check-prompt.md")
+  # DZ2-Isolation (backend-unabhaengig): Agent laeuft in einem leeren
+  # Arbeitsverzeichnis AUSSERHALB des Repos; nur der private SSH-Key liegt dort.
+  # Kein Zugriff auf Ground Truth, Szenario-Dateien oder variant.env (Soll-Urteil).
+  AGENT_CWD="$(mktemp -d "${TMPDIR:-/tmp}/lab-agent-XXXXXX")"
+  cp "$RUN_DIR/ssh/id_ed25519" "$AGENT_CWD/id_ed25519"
+  chmod 600 "$AGENT_CWD/id_ed25519"
+  AGENT_PROMPT="$(cat "$SCEN_DIR/check-prompt.md")
 
 SSH-Zugang (read-only): ssh -i id_ed25519 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p $PORT audit@127.0.0.1"
-    info "starte Agent (claude -p --output-format json) in isoliertem CWD ..."
-    # --allowedTools "Bash": im headless-Modus (claude -p) gibt es keine
-    # interaktive Freigabe; ohne Allowlist werden ssh/Bash-Calls still
-    # verweigert. Das Ziel-Pod ist ephemer + read-only (sudoers-Whitelist),
-    # daher ist Bash-Freigabe im Lab vertretbar.
-    ( cd "$AGENT_CWD" && OTEL_RESOURCE_ATTRIBUTES="$OTEL_ATTRS" \
-        claude -p "$AGENT_PROMPT" --output-format json --allowedTools "Bash" ) \
-        > "$RUN_DIR/agent_output.json" 2> "$RUN_DIR/agent_stderr.log" || true
-    # vollstaendiges Session-Transcript (Prompt+Antwort+Tool-I/O) mitnehmen
-    SID="$(sed -n 's/.*"session_id":[[:space:]]*"\([^"]*\)".*/\1/p' "$RUN_DIR/agent_output.json" | head -n1)"
-    if [[ -n "$SID" ]]; then
-      TRANSCRIPT="$(find "$HOME/.claude/projects" -name "$SID.jsonl" 2>/dev/null | head -n1)"
-      [[ -n "$TRANSCRIPT" ]] && cp "$TRANSCRIPT" "$RUN_DIR/transcript.jsonl"
+
+  if [[ "$BACKEND" == claude ]]; then
+    if command -v claude >/dev/null 2>&1; then
+      info "starte Agent (claude -p --output-format json) in isoliertem CWD ..."
+      # --allowedTools "Bash": im headless-Modus (claude -p) gibt es keine
+      # interaktive Freigabe; ohne Allowlist werden ssh/Bash-Calls still
+      # verweigert. Das Ziel ist ephemer + read-only (sudoers-Whitelist),
+      # daher ist Bash-Freigabe im Lab vertretbar.
+      ( cd "$AGENT_CWD" && OTEL_RESOURCE_ATTRIBUTES="$OTEL_ATTRS" \
+          claude -p "$AGENT_PROMPT" --output-format json --allowedTools "Bash" ) \
+          > "$RUN_DIR/agent_output.json" 2> "$RUN_DIR/agent_stderr.log" || true
+      # vollstaendiges Session-Transcript (Prompt+Antwort+Tool-I/O) mitnehmen
+      SID="$(sed -n 's/.*"session_id":[[:space:]]*"\([^"]*\)".*/\1/p' "$RUN_DIR/agent_output.json" | head -n1)"
+      if [[ -n "$SID" ]]; then
+        TRANSCRIPT="$(find "$HOME/.claude/projects" -name "$SID.jsonl" 2>/dev/null | head -n1)"
+        [[ -n "$TRANSCRIPT" ]] && cp "$TRANSCRIPT" "$RUN_DIR/transcript.jsonl"
+      fi
+      rm -f "$AGENT_CWD/id_ed25519"; rmdir "$AGENT_CWD" 2>/dev/null || true
+      info "Agent fertig -> runs/$RUN_ID/agent_output.json (+ transcript.jsonl falls gefunden)"
+      info "Urteil festhalten + abraeumen: scripts/teardown.sh $RUN_ID --verdict <konform|nicht_konform|nicht_verifizierbar>"
+      echo "$RUN_ID"
+      exit 0
     fi
     rm -f "$AGENT_CWD/id_ed25519"; rmdir "$AGENT_CWD" 2>/dev/null || true
-    info "Agent fertig -> runs/$RUN_ID/agent_output.json (+ transcript.jsonl falls gefunden)"
+    info "--agent gesetzt, aber 'claude' nicht im PATH -> manueller Modus."
+  else
+    # --- Backend opencode (lokal, souveraen, offen; DZ9-Kern) ---------------------
+    # Einziger Unterschied zum claude-Pfad: das Werkzeug + die Normalisierung des
+    # Event-Streams in DASSELBE agent_output.json-Schema. Downstream (extract_verdict,
+    # teardown.sh, aggregate.py) bleibt unveraendert. Kein OTel (opencode #14697) ->
+    # Telemetrie kommt aus dem normalisierten Artefakt (Kosten=0, lokal). Permission
+    # ohne 'ask' (#14473-Hang) via --dangerously-skip-permissions; read-only liegt
+    # ohnehin server-seitig in der Target-sudoers-Whitelist (DZ6).
+    command -v opencode >/dev/null 2>&1 || die "--backend opencode: 'opencode' nicht im PATH (npm i -g opencode-ai@<version>)."
+    command -v python3  >/dev/null 2>&1 || die "--backend opencode: python3 fuer die Normalisierung noetig."
+    OPENCODE_MODEL="${OPENCODE_MODEL:-ollama/gemma4:26b-32k}"
+    OPENCODE_VARIANT="${OPENCODE_VARIANT:-}"     # optional: provider-Reasoning-Effort (high|max|...)
+    OPENCODE_DIGEST="${OPENCODE_DIGEST:-}"       # optional: Ollama-Modell-Digest (Reproduzierbarkeit)
+    # Defensiver Timeout (lokale Inferenz auf iGPU ist langsam; ein haengender
+    # opencode-Lauf - z.B. durch eine stale opencode-Server-Instanz - soll nicht
+    # ewig laufen). Override per OPENCODE_TIMEOUT (Sekunden), 0 = kein Timeout.
+    OPENCODE_TIMEOUT="${OPENCODE_TIMEOUT:-1800}"
+    OC_TIMEOUT_CMD=(); [[ "$OPENCODE_TIMEOUT" != 0 ]] && OC_TIMEOUT_CMD=(timeout "$OPENCODE_TIMEOUT")
+    info "starte Agent (opencode run --format json, model=$OPENCODE_MODEL${OPENCODE_VARIANT:+, variant=$OPENCODE_VARIANT}, timeout=${OPENCODE_TIMEOUT}s) in isoliertem CWD ..."
+    START_MS=$(date +%s%3N)
+    set +e
+    ( cd "$AGENT_CWD" && "${OC_TIMEOUT_CMD[@]}" opencode run "$AGENT_PROMPT" --format json \
+        -m "$OPENCODE_MODEL" ${OPENCODE_VARIANT:+--variant "$OPENCODE_VARIANT"} \
+        --dangerously-skip-permissions ) \
+        > "$RUN_DIR/opencode_events.jsonl" 2> "$RUN_DIR/agent_stderr.log"
+    OC_RC=$?
+    set -e
+    END_MS=$(date +%s%3N)
+    python3 "$REPO_ROOT/scripts/normalize_opencode.py" \
+        --events "$RUN_DIR/opencode_events.jsonl" --wall-ms "$((END_MS-START_MS))" \
+        --rc "$OC_RC" --model "$OPENCODE_MODEL" --model-digest "$OPENCODE_DIGEST" \
+        > "$RUN_DIR/agent_output.json" 2>>"$RUN_DIR/agent_stderr.log" || true
+    # Roh-Eventstream IST das Transcript (Provenienz/Audit, DZ3).
+    cp "$RUN_DIR/opencode_events.jsonl" "$RUN_DIR/transcript.jsonl" 2>/dev/null || true
+    rm -f "$AGENT_CWD/id_ed25519"; rmdir "$AGENT_CWD" 2>/dev/null || true
+    info "Agent fertig -> runs/$RUN_ID/agent_output.json (+ transcript.jsonl), opencode rc=$OC_RC"
     info "Urteil festhalten + abraeumen: scripts/teardown.sh $RUN_ID --verdict <konform|nicht_konform|nicht_verifizierbar>"
     echo "$RUN_ID"
     exit 0
   fi
-  info "--agent gesetzt, aber 'claude' nicht im PATH -> manueller Modus."
 fi
 
 cat >&2 <<EOF
