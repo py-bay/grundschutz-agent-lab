@@ -80,6 +80,8 @@ def load_runs(runs_dir, flt):
             continue
         if flt.get("backend") and rec["backend"] != flt["backend"]:
             continue
+        if flt.get("target") and rec["target"] != flt["target"]:
+            continue
         rec["telemetry"] = load_telemetry(rec["dir"])
         runs.append(rec)
     return runs
@@ -188,12 +190,14 @@ def main():
     ap.add_argument("--scenario", default=None)
     ap.add_argument("--ergebnisklasse", default=None)
     ap.add_argument("--backend", default=None, help="nur Laeufe dieses Agenten: claude|opencode")
+    ap.add_argument("--target", default=None, help="nur Laeufe dieses Substrats: k8s|docker")
     ap.add_argument("--k", type=int, default=4)
     ap.add_argument("--json", default=None, help="Pfad fuer maschinenlesbare Ausgabe")
     args = ap.parse_args()
 
     flt = {"requirement": args.requirement, "scenario": args.scenario,
-           "ergebnisklasse": args.ergebnisklasse, "backend": args.backend}
+           "ergebnisklasse": args.ergebnisklasse, "backend": args.backend,
+           "target": args.target}
     runs = load_runs(args.runs_dir, flt)
     if not runs:
         print("Keine passenden Laeufe gefunden.", file=sys.stderr)

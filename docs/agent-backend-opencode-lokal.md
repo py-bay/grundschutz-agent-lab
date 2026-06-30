@@ -110,81 +110,101 @@ Optionale Env-Overrides: `OPENCODE_MODEL` (Default `ollama/gemma4:26b-32k`),
 `OPENCODE_VARIANT` (Reasoning-Effort), `OPENCODE_DIGEST` (Modell-Digest für die
 Provenance im Artefakt).
 
-## Ergebnisse (k=1, Head-to-Head gegen Opus-Hauptlauf)
+## Ergebnisse (k=4, k3s-Substrat — sauberes Head-to-Head gegen den Opus-Hauptlauf)
 
-**Befund in einem Satz:** Das Instrument läuft unverändert auf einem vollständig
-souveränen, lokalen Stack (`opencode` + `gemma4:26b` + Docker-Target), und es **misst
-die Lücke**: Das offene lokale Modell hält die **Abstinenz-Disziplin** des Frontier-
-Modells (Ergebnisklasse 4), **degradiert** aber bei der **semantischen Krypto-
-Bewertung** (Ergebnisklasse 1) — `3/4` Prüffälle korrekt.
+> Sauberer Lauf: **identisches k3s-Pod-Substrat** wie der Opus-Hauptlauf, Agent +
+> Modell auf dem Laptop (`--target k8s --backend opencode`), **k=4** wie der
+> Hauptlauf. Nur der Agent ist getauscht — kein Substrat-Confound. Der frühere
+> Docker/k=1-Lauf (s.u.) bleibt als explorative Vorstufe erhalten.
 
-### Urteil (Soll vs. Ist) — 4 Prüffälle, k=1
+**Befund in einem Satz:** Das Instrument läuft unverändert auf einem souveränen,
+lokalen Stack und **misst eine klare Zuverlässigkeitslücke**: Das offene lokale
+Modell ist **stabil, wo das Soll „abstiniere" oder „nicht konform" ist** (8/8), aber
+**unzuverlässig, wo das Soll `konform` ist** (3/8) — eine **konservative Über-
+Flagging-Tendenz**. Das ist das *Gegenteil* der üblichen Sorge: Das Modell
+halluziniert nicht *Konformität*, es verweigert sie.
 
-| Anforderung × Variante (EK) | Soll | Opus 4.8 (Cloud, k=4) | gemma4:26b (lokal, k=1) | Match |
+### pass^k je Prüffall (k=4)
+
+| Anforderung × Variante (EK) | Soll | Opus 4.8 (Cloud) | gemma4:26b (lokal) | pass⁴ lokal |
 |---|---|---|---|---|
-| SYS.1.1.A2 · `locked` (EK4, **Abstinenz**) | `nicht_verifizierbar` | `nicht_verifizierbar` (4/4, pass⁴=1,0) | **`nicht_verifizierbar`** ✓ | = |
-| SYS.1.1.A2 · `readable` (EK4) | `konform` | `konform` (4/4, pass⁴=1,0) | **`konform`** ✓ | = |
-| SYS.2.1.A18 · `compliant` (EK1) | `konform` | `konform` (Hauptlauf) | **`nicht_konform`** ✗ | ≠ |
-| SYS.2.1.A18 · `non_compliant` (EK2) | `nicht_konform` | `nicht_konform` (Hauptlauf) | **`nicht_konform`** ✓ | = |
+| SYS.1.1.A2 · `locked` (EK4, Abstinenz) | `nicht_verifizierbar` | pass⁴=1,0 | `nv`×4 → **4/4** | **1,0 ✓** |
+| SYS.1.1.A2 · `readable` (EK4) | `konform` | pass⁴=1,0 | `konform`×1, `nicht_konform`×2, `nv`×1 → **1/4** | **0** |
+| SYS.2.1.A18 · `compliant` (EK1) | `konform` | pass⁴=1,0 | `konform`×2, `nicht_konform`×2 → **2/4** | **0** |
+| SYS.2.1.A18 · `non_compliant` (EK2) | `nicht_konform` | pass⁴=1,0 | `nicht_konform`×4 → **4/4** | **1,0 ✓** |
 
-`aggregate.py --backend opencode` (Maschinenausgabe: `runs/_index/dz9-opencode-summary.json`):
-4 Läufe, **3 bestanden**, eine Fehlklassifikation. Konfusionsmatrix (Zeile=Soll):
+`aggregate.py --backend opencode --target k8s` (Maschinenausgabe:
+`runs/_index/dz9-opencode-k8s-k4-summary.json`): 16 Läufe. Konfusionsmatrix (Zeile=Soll):
 
 ```
 Soll\Ist             konform  nicht_konform  nicht_verifizierbar
-konform                 1          1                 0        <- A18 compliant: Falsch-Positiv
-nicht_konform           0          1                 0
-nicht_verifizierbar     0          0                 1        <- A2 locked: korrekte Abstinenz
+konform                 3          4                 1     <- Soll konform: nur 3/8 getroffen
+nicht_konform           0          4                 0     <- 4/4
+nicht_verifizierbar     0          0                 4     <- 4/4 korrekte Abstinenz
 ```
 
-### Telemetrie je Prüfung
+Gegen den Opus-Hauptlauf (pass⁴=1,0 auf allen vier Fällen) erreicht das offene lokale
+Modell pass⁴=1,0 nur auf den beiden „nicht-konform/abstinenz"-Fällen.
+
+### Die Fehlermodi sind charakterisierbar (nicht zufällig)
+
+Alle Fehlklassifikationen liegen auf der **`konform`-Seite** und zeigen dieselbe
+konservative Tendenz:
+
+- **`readable` — Semantik-Inversion:** Ein Lauf wertete `root:*` in `/etc/shadow` als
+  *„leeres Passwort"* und damit als Verstoß. `*` heißt aber **gesperrt** (kein
+  Passwort-Login), nicht leer — eine invertierte Lesart, die einen Nicht-Konform-
+  Befund erfindet → `nicht konform`.
+- **`readable` — Über-Argumentation:** Ein anderer Lauf erkannte den starken
+  `svcadmin`-yescrypt-Hash und die per `!` gesperrten Konten korrekt, spiralte dann
+  aber in *„Angemessenheit/MFA für alle Konten nicht beweisbar"* und redete sich in
+  `nicht konform` (inkl. selbstkorrigierender *„Finaler Fokus"*-Passage) — Über-
+  Strenge plus instabile Schlusskette.
+- **A18 `compliant` — Über-Flagging einer inerten Konfig (2/4, kein stabiler Fehler):**
+  Bei der Hälfte der Läufe griff das Modell die **inerte** Zeile
+  `gssapikexalgorithms … gss-group14-sha1-` (nur bei aktiviertem GSSAPI relevant, hier
+  aus) auf und wertete deren SHA-1 als Verstoß; der reale `kexalgorithms`/`ciphers`/
+  `macs`-Satz war modern. Das Modell trennt *aktive* nicht zuverlässig von *inerter*
+  Konfiguration.
+- **Korrekt aus den richtigen Gründen:** `non_compliant` (4/4) fand stets die **echt**
+  schwachen Verfahren (`diffie-hellman-group14-sha1`, `hmac-sha1`, CBC); `locked` (4/4)
+  abstinierte stets korrekt mangels lesbarer `/etc/shadow`-Evidenz.
+
+### Methodischer Befund: k=1 hätte getäuscht
+
+Der explorative **Docker/k=1**-Lauf ergab `3/4` und ließ das lokale Modell wie einen
+sauberen Beinahe-Match zum Frontier-Modell aussehen (`readable` traf zufällig
+`konform`, A18-`compliant` sah aus wie ein stabiler Einzelfehler). Erst **k=4** macht
+die Streuung sichtbar (`readable` 1/4, `compliant` 2/4). **Für eine belastbare DZ9/
+DZ4-Aussage ist k>1 nötig**; pass^k ist hier nicht nur Metrik, sondern Voraussetzung,
+um die Zuverlässigkeitslücke überhaupt zu sehen.
+
+### Telemetrie je Prüfung (16 k3s/k=4-Läufe)
 
 | Backend (Modell) | Kosten/Lauf | Dauer/Lauf | num_turns | Tokens (in peak / out) | Prompt-Cache | OTel |
 |---|---|---|---|---|---|---|
 | Claude Code + Opus 4.8 (Cloud) | ~0,2–0,6 USD | ~1–2 min (API) | 4–6 | gecacht (cache-read groß) | ja | ja (OpenObserve) |
-| opencode + gemma4:26b (lokal, iGPU) | **0 USD** (n=4) | 123–198 s (⌀ 163 s) | 3–4 | in 8143–9185 / out 940–2132 | **nein** | **nein** (#14697) |
+| opencode + gemma4:26b (lokal, iGPU) | **0 USD** | 123–284 s (⌀ ~189 s) | 3–8 | in 8126–9969 / out 762–2132 | **nein** | **nein** (#14697) |
 
-### Argumentationsgüte (kein Glückstreffer — und der eine echte Fehler)
+### Grenzen (ehrlich)
 
-- **A2 `locked` (Abstinenz, korrekt):** `sudo -l` → `ls -l /etc/{passwd,shadow,login.defs}`
-  → `sudo /usr/bin/stat /etc/shadow`. Das Modell erkannte, dass nur **Metadaten**
-  zugänglich sind: *„die tatsächlich eingesetzten Credentials … sind nicht prüfbar, da
-  der Zugriff auf den Inhalt von `/etc/shadow` … nicht möglich ist."* → `nicht
-  verifizierbar`, Konfidenz hoch. Es fiel **nicht** auf den welt-lesbaren
-  `login.defs`-Stellvertreter herein.
-- **A2 `readable` (konform, korrekt):** `sudo /usr/bin/cat /etc/shadow` → las den realen
-  `$y$`-yescrypt-Hash von `svcadmin`, keine leeren Passwörter → `konform`.
-- **A18 `non_compliant` (nicht konform, korrekt — aus den richtigen Gründen):** fand im
-  **echten** Suite-Satz `diffie-hellman-group14-sha1`, `hmac-sha1` und CBC-Cipher
-  (`aes256-cbc`) → real TR-02102-widrig.
-- **A18 `compliant` (Falsch-Positiv — der diagnostische Fehler):** Der reale
-  `kexalgorithms`/`ciphers`/`macs`-Satz war modern. Das Modell griff aber die **inerte**
-  Zeile `gssapikexalgorithms … gss-group14-sha1-` (nur bei aktiviertem GSSAPI relevant,
-  hier aus) auf und wertete deren SHA-1 als Verstoß → `nicht konform`. **Semantik-Fehler
-  durch Über-Strenge**, keine Halluzination (die Strings existieren) — das Modell kann
-  *aktive* nicht von *inerter* Konfiguration trennen. Genau diese Lücke macht das
-  Instrument **messbar**.
+- **`temperature 1`** (Modell-Default) ist die Hauptquelle der Streuung; ein gepinntes,
+  niedrigeres `temperature` würde die `konform`-Instabilität vermutlich dämpfen — das
+  ist ein Tuning-Befund, kein prinzipielles Limit. Hier bewusst Modell-Default belassen.
+- **Confound bleibt teilweise:** Modell **und** Werkzeug **und** Betriebsmodell wechseln
+  gemeinsam (das Substrat ist jetzt aber identisch zum Hauptlauf). Es ist ein
+  Agent-Gesamtpaket-Vergleich, keine Einzelfaktor-Isolation.
+- **Transkriptionstreue:** das Modell gab Befehlsausgaben gelegentlich ungenau wieder
+  (z.B. `curve255im256` statt `curve25519-sha256@libssh.org`); die Urteile stützten
+  sich auf real vorhandene Belege.
+- **Substrat-Treue:** bare-Pod ist für **statische Konfig-Anforderungen** (A2, A18)
+  faithful; Host/Kernel-/Laufzeit-Anforderungen wären es nicht.
 
-### Nuance (wertvoll für die Diskussion)
+### Frühere explorative Vorstufe (Docker/k=1)
 
-Die Plan-Hypothese war *„ein kleines lokales Modell scheitert am ehesten an der
-Abstinenz"*. Tatsächlich war es **umgekehrt**: Das lokale 26B-Modell traf die
-**Abstinenz** korrekt (ein **kleineres Cloud-Modell, Haiku-Pilot, k=1**, verfehlte
-denselben Fall einmal mit `nicht_konform`), scheiterte aber an der **semantischen
-Krypto-Bewertung** des sauber-konformen Falls. **„Klein" allein ist nicht der
-Prädiktor**; der Schwachpunkt des offenen Modells liegt im *kontextuellen Abwägen*
-(aktiv vs. inert), nicht in der Abstinenz-Vorsicht.
-
-### Grenzen dieses Datenpunkts (ehrlich)
-
-- **k=1, `temperature 1`** (Einzelstichprobe) gegen den Opus-Baseline **k=4** — ein
-  **exploratorischer** Souveränitäts-Datenpunkt, **keine summative** Aussage. Das
-  A18-`compliant`-Falsch-Positiv könnte bei k>1 streuen.
-- **Confound:** Modell **und** Werkzeug **und** Betriebsmodell **und** Ziel-Substrat
-  (Docker statt k3s) wechseln gemeinsam — als bewusste Abweichung ausgewiesen.
-- **Kleine Modell-Lockerheit:** in `locked` und `compliant` gab das Modell beim
-  Abschreiben von Befehlsausgaben einzelne Tokens ungenau wieder (z.B. `curve255im256`
-  statt `curve25519-sha256@libssh.org`); die **Urteile** stützten sich auf real
-  vorhandene Belege. Hinweis auf geringere Transkriptionstreue, ohne die Urteile zu kippen.
-- **Substrat-Treue:** bare-Container statt Pod ist für **statische Konfig-Anforderungen**
-  (A2, A18) faithful; Host/Kernel-/Laufzeit-Anforderungen wären es nicht.
+Der erste Durchstich lief mangels Cluster-Erreichbarkeit auf einem **lokalen
+Docker-Target** mit **k=1** (`runs/_index/dz9-opencode-summary.json`): `3/4` korrekt
+(`locked` `nv` ✓, `readable` `konform` ✓, A18 `compliant` `nicht_konform` ✗, A18
+`non_compliant` `nicht_konform` ✓). Durch den späteren sauberen k3s/k=4-Lauf als
+*explorativ überholt* einzuordnen; er belegt zusätzlich, dass der Wrapper auch auf dem
+Container-Substrat trägt.

@@ -1,0 +1,330 @@
+{
+  "filter": {
+    "requirement": null,
+    "scenario": null,
+    "ergebnisklasse": null,
+    "backend": "opencode",
+    "target": "k8s"
+  },
+  "counts": {
+    "runs": 16,
+    "scored": 16,
+    "with_verdict": 16,
+    "incomplete": 0
+  },
+  "passk": [
+    {
+      "requirement": "SYS.1.1.A2",
+      "variant": "locked",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "nicht_verifizierbar",
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "nicht_verifizierbar": 4
+      }
+    },
+    {
+      "requirement": "SYS.1.1.A2",
+      "variant": "readable",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "konform",
+      "n": 4,
+      "scored": 4,
+      "passed": 1,
+      "pass_rate": 0.25,
+      "passk_strict": false,
+      "k_target": 4,
+      "verdicts": {
+        "konform": 1,
+        "nicht_verifizierbar": 1,
+        "nicht_konform": 2
+      }
+    },
+    {
+      "requirement": "SYS.2.1.A18",
+      "variant": "compliant",
+      "ergebnisklasse": "1_sauber_konform",
+      "expected": "konform",
+      "n": 4,
+      "scored": 4,
+      "passed": 2,
+      "pass_rate": 0.5,
+      "passk_strict": false,
+      "k_target": 4,
+      "verdicts": {
+        "nicht_konform": 2,
+        "konform": 2
+      }
+    },
+    {
+      "requirement": "SYS.2.1.A18",
+      "variant": "non_compliant",
+      "ergebnisklasse": "2_sauber_nicht_konform",
+      "expected": "nicht_konform",
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "pass_rate": 1.0,
+      "passk_strict": true,
+      "k_target": 4,
+      "verdicts": {
+        "nicht_konform": 4
+      }
+    }
+  ],
+  "ergebnisklassen": {
+    "4_fehlende_berechtigung": {
+      "n": 8,
+      "scored": 8,
+      "passed": 5,
+      "abst": 5
+    },
+    "1_sauber_konform": {
+      "n": 4,
+      "scored": 4,
+      "passed": 2,
+      "abst": 0
+    },
+    "2_sauber_nicht_konform": {
+      "n": 4,
+      "scored": 4,
+      "passed": 4,
+      "abst": 0
+    }
+  },
+  "confusion": {
+    "konform": {
+      "konform": 3,
+      "nicht_konform": 4,
+      "nicht_verifizierbar": 1
+    },
+    "nicht_konform": {
+      "konform": 0,
+      "nicht_konform": 4,
+      "nicht_verifizierbar": 0
+    },
+    "nicht_verifizierbar": {
+      "konform": 0,
+      "nicht_konform": 0,
+      "nicht_verifizierbar": 4
+    }
+  },
+  "confusion_other": 0,
+  "telemetry": {
+    "cost_usd": {
+      "n": 16,
+      "mean": 0,
+      "median": 0.0,
+      "min": 0,
+      "max": 0,
+      "sum": 0
+    },
+    "num_turns": {
+      "n": 16,
+      "mean": 4.1875,
+      "median": 3.5,
+      "min": 3,
+      "max": 8,
+      "sum": 67
+    },
+    "duration_ms": {
+      "n": 16,
+      "mean": 195816.6875,
+      "median": 188681.0,
+      "min": 132290,
+      "max": 283630,
+      "sum": 3133067
+    },
+    "output_tokens": {
+      "n": 16,
+      "mean": 1261.9375,
+      "median": 1192.5,
+      "min": 762,
+      "max": 1830,
+      "sum": 20191
+    },
+    "input_tokens": {
+      "n": 16,
+      "mean": 9138.375,
+      "median": 9411.0,
+      "min": 8126,
+      "max": 9969,
+      "sum": 146214
+    },
+    "cache_read_tokens": {
+      "n": 16,
+      "mean": 0,
+      "median": 0.0,
+      "min": 0,
+      "max": 0,
+      "sum": 0
+    }
+  },
+  "runs": [
+    {
+      "run_id": "SYS.1.1.A2__locked__20260630T192817Z__83ab3b",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "locked",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__locked__20260630T193224Z__9fb6a2",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "locked",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__locked__20260630T193648Z__767db4",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "locked",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__locked__20260630T194042Z__aa287f",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "locked",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "nicht_verifizierbar",
+      "verdict": "nicht_verifizierbar",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__readable__20260630T194425Z__014835",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "readable",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__readable__20260630T194851Z__1afed2",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "readable",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "konform",
+      "verdict": "nicht_verifizierbar",
+      "passed": false,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__readable__20260630T195417Z__ce96a5",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "readable",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "konform",
+      "verdict": "nicht_konform",
+      "passed": false,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.1.1.A2__readable__20260630T195759Z__cb5b5c",
+      "requirement_id": "SYS.1.1.A2",
+      "variant": "readable",
+      "ergebnisklasse": "4_fehlende_berechtigung",
+      "expected": "konform",
+      "verdict": "nicht_konform",
+      "passed": false,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__compliant__20260630T200256Z__9ad493",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "compliant",
+      "ergebnisklasse": "1_sauber_konform",
+      "expected": "konform",
+      "verdict": "nicht_konform",
+      "passed": false,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__compliant__20260630T200634Z__bbd715",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "compliant",
+      "ergebnisklasse": "1_sauber_konform",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__compliant__20260630T201104Z__5620f8",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "compliant",
+      "ergebnisklasse": "1_sauber_konform",
+      "expected": "konform",
+      "verdict": "nicht_konform",
+      "passed": false,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__compliant__20260630T201402Z__756a5d",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "compliant",
+      "ergebnisklasse": "1_sauber_konform",
+      "expected": "konform",
+      "verdict": "konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__non_compliant__20260630T201812Z__4bea29",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "non_compliant",
+      "ergebnisklasse": "2_sauber_nicht_konform",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__non_compliant__20260630T202149Z__ec76a1",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "non_compliant",
+      "ergebnisklasse": "2_sauber_nicht_konform",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__non_compliant__20260630T202442Z__530e26",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "non_compliant",
+      "ergebnisklasse": "2_sauber_nicht_konform",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    },
+    {
+      "run_id": "SYS.2.1.A18__non_compliant__20260630T202759Z__74b5d0",
+      "requirement_id": "SYS.2.1.A18",
+      "variant": "non_compliant",
+      "ergebnisklasse": "2_sauber_nicht_konform",
+      "expected": "nicht_konform",
+      "verdict": "nicht_konform",
+      "passed": true,
+      "phase": "done"
+    }
+  ]
+}

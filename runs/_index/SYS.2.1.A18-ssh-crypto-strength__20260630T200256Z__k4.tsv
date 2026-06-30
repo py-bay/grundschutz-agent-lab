@@ -1,0 +1,9 @@
+run_id	variant	expected	proposed_verdict	sure	scored
+SYS.2.1.A18__compliant__20260630T200256Z__9ad493	compliant	konform	nicht_konform	yes	yes
+SYS.2.1.A18__compliant__20260630T200634Z__bbd715	compliant	konform	konform	yes	yes
+SYS.2.1.A18__compliant__20260630T201104Z__5620f8	compliant	konform	nicht_konform	yes	yes
+SYS.2.1.A18__compliant__20260630T201402Z__756a5d	compliant	konform	konform	yes	yes
+SYS.2.1.A18__non_compliant__20260630T201812Z__4bea29	non_compliant	nicht_konform	nicht_konform	yes	yes
+SYS.2.1.A18__non_compliant__20260630T202149Z__ec76a1	non_compliant	nicht_konform	nicht_konform	yes	yes
+SYS.2.1.A18__non_compliant__20260630T202442Z__530e26	non_compliant	nicht_konform	nicht_konform	yes	yes
+SYS.2.1.A18__non_compliant__20260630T202759Z__74b5d0	non_compliant	nicht_konform	nicht_konform	yes	yes

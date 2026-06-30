@@ -1,0 +1,9 @@
+run_id	variant	expected	proposed_verdict	sure	scored
+SYS.1.1.A2__locked__20260630T192817Z__83ab3b	locked	nicht_verifizierbar	nicht_verifizierbar	yes	yes
+SYS.1.1.A2__locked__20260630T193224Z__9fb6a2	locked	nicht_verifizierbar	nicht_verifizierbar	yes	yes
+SYS.1.1.A2__locked__20260630T193648Z__767db4	locked	nicht_verifizierbar	nicht_verifizierbar	yes	yes
+SYS.1.1.A2__locked__20260630T194042Z__aa287f	locked	nicht_verifizierbar	nicht_verifizierbar	yes	yes
+SYS.1.1.A2__readable__20260630T194425Z__014835	readable	konform	konform	yes	yes
+SYS.1.1.A2__readable__20260630T194851Z__1afed2	readable	konform	nicht_verifizierbar	yes	yes
+SYS.1.1.A2__readable__20260630T195417Z__ce96a5	readable	konform	nicht_konform	yes	yes
+SYS.1.1.A2__readable__20260630T195759Z__cb5b5c	readable	konform	nicht_konform	yes	yes
