@@ -1,10 +1,10 @@
 # Hauptlauf-Ergebnisse (summativer k=4-Lauf)
 
-Datum: 2026-06-24. Betreiber-Laptop, Cluster via SSH-Tunnel (beide Nodes Ready).
+Datum: 2026-06-24, beide Cluster-Nodes Ready.
 Maschinenlesbar: [`../runs/_index/hauptlauf.json`](../runs/_index/hauptlauf.json)
 (enthält die 40 Run-IDs des gewerteten Sets + alle Kennzahlen).
 
-## Konfiguration (gepinnt, DZ5/DZ9)
+## Konfiguration (gepinnt)
 
 | Parameter | Wert |
 |---|---|
@@ -12,8 +12,8 @@ Maschinenlesbar: [`../runs/_index/hauptlauf.json`](../runs/_index/hauptlauf.json
 | Reasoning-Effort | `high` (`claude -p --effort high`) |
 | Permissions | `--dangerously-skip-permissions` (headless; Target read-only via sudoers) |
 | Temperatur | n/a — Opus 4.8 lehnt Sampling-Params ab; Stochastik via pass^k gemessen |
-| Agent-Image | `git.k3s.pybay.de/gitsim/claude-code@sha256:238800d5…` (node-base gepinnt, claude-code 2.1.187) |
-| Target-Image | `git.k3s.pybay.de/gitsim/ubuntu-sshd@sha256:7176dbfe…` (ubuntu-base gepinnt) |
+| Agent-Image | `claude-code@sha256:238800d5…` (node-base gepinnt, claude-code 2.1.187) |
+| Target-Image | `ubuntu-sshd@sha256:7176dbfe…` (ubuntu-base gepinnt) |
 | Wiederholungen | k=4 je Variante; 5 Träger × 2 Varianten = **40 gewertete Läufe** |
 
 `modelUsage` jedes Laufs enthält **ausschließlich** `claude-opus-4-8` (Hintergrund-
@@ -37,7 +37,7 @@ modell-Pin greift; kein Haiku). Über alle 40 Transcripts: **0 GT-Leakage** (DZ2
 **Alle 10 (Item×Variante)-Gruppen bestehen pass^4 vollständig** (40/40 gewertet,
 0 unvollständig).
 
-## 3×3-Konfusionsmatrix (DZ4) — perfekte Diagonale
+## 3×3-Konfusionsmatrix — perfekte Diagonale
 
 | Soll ↓ \ Ist → | konform | nicht_konform | nicht_verifizierbar |
 |---|--:|--:|--:|
@@ -60,7 +60,7 @@ entscheidende Evidenz strukturell fehlt.
 | 4 (fehlende Berechtigung) | 8 | 100 % | **4** |
 | 5 (nicht entscheidbar / off-host) | 8 | 100 % | **4** |
 
-## Telemetrie (DZ7), je Lauf über n=40
+## Telemetrie, je Lauf über n=40
 
 | Kennzahl | mean | median | min | max | Σ |
 |---|--:|--:|--:|--:|--:|
@@ -71,7 +71,7 @@ entscheidende Evidenz strukturell fehlt.
 | Input-Tokens | 2 577 | 2 615 | 2 482 | 2 623 | 103 075 |
 | Cache-Read-Tokens | 126 800 | 120 100 | 72 840 | 219 900 | 5 073 600 |
 
-## Evidenzbasierte Auditierbarkeit (DZ3)
+## Evidenzbasierte Auditierbarkeit
 
 Stichprobe (3 Läufe) gegen `agent_output.json` + `transcript.jsonl`: jedes Urteil
 ist durch reale Tool-Calls belegt (21/26/14 `tool_use` je Lauf), keine Behauptung
@@ -101,13 +101,13 @@ ohne Evidenz:
    ab (`is_error=true`, kein Urteil) — Infra-Rauschen (1/41 ≈ 2,4 %), kein
    Modellurteil. Ausgeschlossen, 1× nachgefahren (`konform`).
 
-## Fehlerklassen (DZ8)
+## Fehlerklassen
 
 Im **gewerteten** 40er-Set gibt es **null Modell-Fehlurteile** → keine
 Fehlerklassen-Zuordnung nötig. Die beiden Vorfälle oben sind als
 Tooling-Defekt bzw. Infra-Transient klassifiziert, nicht als Modellfehler.
 
-## Nebenbefund (DZ4-Diskussion): stärkeres Modell ⇒ schärfere Diskriminierung
+## Nebenbefund: stärkeres Modell ⇒ schärfere Diskriminierung
 
 Den fehlenden `pam_pwquality`-Modul (Vorfall 1) urteilte Opus 4.8 **deterministisch
 4/4** als `nicht_konform`, während der Pilot-Mix (Sonnet 4.6 + Haiku 4.5) dieselbe

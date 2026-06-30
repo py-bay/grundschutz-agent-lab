@@ -1,7 +1,7 @@
-# Fehlerklassen-Rubrik (DZ8)
+# Fehlerklassen-Rubrik
 
 Ex-ante-Schema zur Einordnung **gescheiterter** Läufe. Belegt die **diagnostische
-Aussagekraft (DZ8)** des Labors: ein konstruierter Fehlfall lässt sich nicht nur
+Aussagekraft** des Labors: ein konstruierter Fehlfall lässt sich nicht nur
 als „falsch" zählen, sondern in **genau eine** Fehlerklasse einordnen — *warum*
 das Soll verfehlt wurde.
 
@@ -72,6 +72,6 @@ Urteil außerhalb des Enums. Der inhaltliche Befund kann sogar richtig sein — 
    wird in EK 4/5 ein Sachurteil **erzwungen**? → **`halluzination`**.
 4. Evidenz korrekt erhoben, aber **falsch gedeutet**? → **`semantik`**.
 
-Genau **eine** Klasse je gescheitertem Lauf. Die Verteilung wird in Kap. 5 als
+Genau **eine** Klasse je gescheitertem Lauf. Die Verteilung wird als
 **Einordnung** berichtet (welche Fehlerart wo auftrat), **nicht** als
 Verteilungsstatistik mit Repräsentativitätsanspruch.

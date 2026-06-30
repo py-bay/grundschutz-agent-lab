@@ -1,7 +1,7 @@
 # Telemetrie: Claude Code -> OpenObserve, pro Lauf getaggt
 
 Ziel: jeder Agentenlauf schreibt OTel-Metriken/-Events in das
-OpenObserve im Cluster (`o2.k3s.pybay.de`), getaggt mit `run.id`, sodass
+OpenObserve im Cluster (`<openobserve-host>`), getaggt mit `run.id`, sodass
 sich Token, Kosten, Tool-Entscheidungen etc. **pro Lauf** und **ueber
 mehrere Laeufe** auswerten lassen.
 
@@ -17,7 +17,7 @@ Base64-Auth-String steht nur lokal in der User-`settings.json`.
     "OTEL_METRICS_EXPORTER": "otlp",
     "OTEL_LOGS_EXPORTER": "otlp",
     "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://o2.k3s.pybay.de/api/default",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://<openobserve-host>/api/default",
     "OTEL_EXPORTER_OTLP_HEADERS": "Authorization=Basic <BASE64>",
     "OTEL_LOG_USER_PROMPTS": "1",
     "OTEL_LOG_TOOL_DETAILS": "1"
@@ -31,8 +31,7 @@ den Prompt, `OTEL_LOG_TOOL_DETAILS=1` Tool-Name/Befehl/Argumente. Den
 Auth-Header haelt man besser aus der Datei raus und setzt ihn als
 Umgebungsvariable (`OTEL_EXPORTER_OTLP_HEADERS`).
 
-- **`<BASE64>`** erzeugen aus den OpenObserve-Admin-Creds (gleiche wie aus
-  dem homelab-Vault `openobserve_admin_email` / `openobserve_admin_password`):
+- **`<BASE64>`** erzeugen aus den OpenObserve-Admin-Creds:
   `echo -n 'email:passwort' | base64 -w0`. OpenObserve nutzt **Basic**-Auth,
   nicht Bearer.
 - **Endpoint:** OpenObserve ingestiert OTLP unter `/api/<org>/...`; der
@@ -41,7 +40,7 @@ Umgebungsvariable (`OTEL_EXPORTER_OTLP_HEADERS`).
 - **Header-Format ist strikt:** `Key=Value`, keine Leerzeichen um `=`.
 
 Gegenpruefen, dass es funkt: einen beliebigen `claude`-Lauf machen, dann im
-o2-Web (`https://o2.k3s.pybay.de/web`) im Logs/Metrics-Stream auf
+o2-Web (`https://<openobserve-host>/web`) im Logs/Metrics-Stream auf
 `claude_code.*` filtern.
 
 ## 2. Pro-Lauf-Tagging (macht `run.sh` automatisch)
@@ -102,17 +101,17 @@ prompt_id, request_id, session_id`.
 - **Pro-Lauf-Artefakt im Repo** (`runs/<run_id>/agent_output.json` +
   `transcript.jsonl`) = vollstaendige qualitative Schicht (Pruefurteil +
   Begruendung + ausgefuehrte Befehle/Evidenz) fuer GT-Abgleich und
-  H3-Fehlerklassen-Codierung. `run.sh --agent` erzeugt beide automatisch.
+  Fehlerklassen-Codierung. `run.sh --agent` erzeugt beide automatisch.
 
 ## 6. o2 direkt abfragen (Such-API)
 
-OpenObserve hat eine SQL-Such-API - so ziehe ich (und du) Laufdaten ohne UI:
+OpenObserve hat eine SQL-Such-API — so lassen sich Laufdaten ohne UI ziehen:
 
 ```bash
 AUTH='Authorization: Basic <BASE64>'
 START=$(( $(date -u -d '24 hours ago' +%s) * 1000000 ))
 END=$(( $(date -u +%s) * 1000000 ))
-curl -s -X POST "https://o2.k3s.pybay.de/api/default/_search?type=logs" \
+curl -s -X POST "https://<openobserve-host>/api/default/_search?type=logs" \
   -H "$AUTH" -H 'Content-Type: application/json' -d @- <<JSON
 { "query": {
     "sql": "SELECT event_name, model, input_tokens, output_tokens, cost_usd FROM \"default\" WHERE service_name='claude-code' AND run_id='<RUN_ID>' ORDER BY _timestamp",

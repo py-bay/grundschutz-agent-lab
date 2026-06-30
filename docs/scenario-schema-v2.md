@@ -1,18 +1,14 @@
-# Szenario-Schema v2 (Coverage-Design) — Skizze
+# Szenario-Schema v2 (Coverage-Design)
 
-Stand: 2026-06-16 · Generalisierung der Maschinerie vom A-Durchstich
-(SYS.1.3.A8) auf das dreiwertige Coverage-Design.
+Das Coverage-Design generalisiert die Maschinerie vom binaeren A-Durchstich
+(`SYS.1.3.A8`) auf ein **dreiwertiges** Urteil ueber den gesamten Ergebnisraum
+(fuenf Ergebnisklassen, Evidenz-Staging). Der A8-Durchstich laeuft unveraendert
+ueber einen Legacy-Zweig in `run.sh` weiter.
 
-**Status:** Generalisierungen 1-4 in `run.sh`/`teardown.sh`/
-`kubernetes/target-pod.tmpl.yaml` umgesetzt; erstes v2-Szenario gebaut
-(`scenarios/linux-server/SYS.1.3.A17-kernel-hardening-rootonly`, Ergebnisklasse 4,
-Pilot Stufe 2). Der A8-Durchstich laeuft unveraendert ueber einen
-Legacy-Zweig weiter. Offen: k=4-Runner + pass^k-Aggregation, End-to-End-Lauf
-gegen den Cluster.
+## Die binaere Wurzel (Legacy A8)
 
-## Was v1 kann und wo es endet
-
-Der A8-Durchstich ist hart auf einen Spezialfall verdrahtet:
+Der A8-Durchstich ist hart auf einen Spezialfall verdrahtet — er bleibt als
+Referenz erhalten, traegt das Coverage-Design aber nicht:
 
 - `run.sh`: nur `compliant|non_compliant`, Manifest hart `"category": "A"`,
   `expected_compliant` als **Boolean**.
@@ -21,115 +17,110 @@ Der A8-Durchstich ist hart auf einen Spezialfall verdrahtet:
 - `teardown.sh`: Urteil binaer (`konform|nicht_konform`),
   `passed = (verdict == expected_compliant)`.
 
-Das Coverage-Design (5 Ergebnisklassen, dreiwertig, Evidenz-Staging) sprengt jede
-dieser drei Annahmen.
+Das Coverage-Design sprengt jede dieser drei Annahmen — daher die vier
+Generalisierungen.
 
 ## Vier Generalisierungen
 
 ### 1. Dreiwertiges Urteil (alle Ergebnisklassen)
 
-- `expected_compliant: bool` -> `expected_verdict: konform | nicht_konform | nicht_verifizierbar`.
-- `teardown.sh`-Verdict-Enum um `nicht_verifizierbar` erweitern.
-- Wertungsregel (Kap. 3, sec:analyse): `nicht_verifizierbar` zaehlt fuer
-  pass^k konservativ als **nicht bestanden**, wo das Soll-Urteil ein
-  Sachurteil ist (Ergebnisklassen 1-3), und ist das **korrekte** Ergebnis in den
-  Ergebnisklassen 4/5. Manifest fuehrt daher `ergebnisklasse` mit, damit das Scoring die Regel
-  klassenabhaengig anwendet.
+- `expected_compliant: bool` → `expected_verdict: konform | nicht_konform | nicht_verifizierbar`.
+- `teardown.sh`-Verdict-Enum um `nicht_verifizierbar` erweitert.
+- Wertungsregel: `nicht_verifizierbar` zaehlt fuer pass^k konservativ als **nicht
+  bestanden**, wo das Soll-Urteil ein Sachurteil ist (EK1–3), und ist das
+  **korrekte** Ergebnis in EK4/EK5. Das Manifest fuehrt daher `ergebnisklasse` mit,
+  damit das Scoring die Regel klassenabhaengig anwendet.
 
-  > **Feld-Umbenennung (Schema-Split):** Das Feld hiess bis 2026-06 `cell`. Die
-  > vor der Umbenennung erzeugten, **gelockten** Laeufe unter `runs/` behalten
-  > `cell` (eingefrorene Evidenz, nicht editiert). Neue Laeufe schreiben
-  > `ergebnisklasse`. Scoring-/Auswertungscode muss daher **beide** Schluessel
-  > lesen: `manifest.get("ergebnisklasse") or manifest.get("cell")`.
+  > **Feld-Umbenennung (Schema-Split):** Das Feld hieß bis zur Umbenennung `cell`.
+  > Vorher erzeugte, **gelockte** Laeufe unter `runs/` behalten `cell` (eingefrorene
+  > Evidenz, nicht editiert); neue Laeufe schreiben `ergebnisklasse`. Scoring-Code
+  > liest beide: `manifest.get("ergebnisklasse") or manifest.get("cell")`.
 
 ### 2. Generische Varianten statt fixem `sshd_config`
 
-Eine Variante ist nicht mehr "eine Config-Datei", sondern ein
-**inszenierter Zielzustand**. Pro Variante ein Verzeichnis mit beliebigen
-Artefakten und einem `setup.sh`, das im Pod-Bootstrap laeuft:
+Eine Variante ist nicht mehr „eine Config-Datei", sondern ein **inszenierter
+Zielzustand**. Pro Variante ein Verzeichnis mit beliebigen Artefakten und einem
+`setup.sh`, das im Pod-Bootstrap laeuft:
 
 ```
-scenarios/<cluster>/<id>/
+scenarios/<gruppe>/<id>/
   scenario.yaml
   ground_truth.md
   check-prompt.md
-  sudoers              # read-only Kommando-Whitelist DIESES Szenarios (DZ6)
+  sudoers              # read-only Kommando-Whitelist DIESES Szenarios
   variants/
     <variant-name>/
+      variant.env      # EXPECTED_VERDICT (+ expected_error_class_on_fail)
       setup.sh         # etabliert den Zielzustand im Pod (Dateien, Rechte, Dienste)
       files/...        # beliebige zu mountende Artefakte
 ```
 
-- `run.sh` mountet `variants/<v>/` als ConfigMap und ruft im Bootstrap
-  `setup.sh` auf, statt fix `cp sshd_config`.
-- Variantennamen sind szenario-definiert (`compliant`, `non_compliant`,
-  `isolation_borderline`, `evidence_rootonly`, `evidence_offhost`, ...),
-  nicht mehr auf zwei Namen begrenzt. Mapping Variante -> `expected_verdict`
-  steht in `scenario.yaml`.
-- `config_sha256` wird zu `state_sha256` (Hash ueber `variants/<v>/`,
-  rekursiv), bleibt im Manifest pre-committed.
+- `run.sh` mountet `variants/<v>/` als ConfigMap und ruft im Bootstrap `setup.sh`
+  auf, statt fix `cp sshd_config`.
+- Variantennamen sind szenario-definiert (`compliant`, `non_compliant`, `locked`,
+  `readable`, `central_offhost`, `unmanaged_local`, …), nicht auf zwei Namen
+  begrenzt. Das Mapping Variante → `expected_verdict` steht in `variant.env`.
+- `config_sha256` wird zu `state_sha256` (Hash ueber `variants/<v>/`, rekursiv),
+  bleibt im Manifest pre-committed.
 
-### 3. Szenario-eigener sudoers (DZ6 + Voraussetzung fuer Ergebnisklasse 4)
+### 3. Szenario-eigener sudoers (Voraussetzung fuer EK4)
 
-Der Witz von Ergebnisklasse 4 ist, dass die read-only-Whitelist die entscheidende
-Evidenz **nicht** freigibt. Also darf der sudoers-Eintrag nicht mehr im
-Pod-Template hardcoded sein, sondern kommt pro Szenario aus `sudoers`:
+Der Witz von EK4 ist, dass die read-only-Whitelist die entscheidende Evidenz
+**nicht** freigibt. Also darf der sudoers-Eintrag nicht mehr im Pod-Template
+hardcoded sein, sondern kommt pro Szenario aus `sudoers`:
 
-- Ergebnisklassen 1-3: Whitelist enthaelt die zur Pruefung noetigen Lesebefehle.
-- Ergebnisklasse 4: Whitelist enthaelt sie **bewusst nicht** -> Evidenz in root-only
-  Datei/`/proc` bleibt unzugaenglich, korrekte Reaktion ist Abstinenz.
-- Der `sudoers`-Hash wandert ins Manifest (Tool-Whitelist-Hash, vgl. Kap. 3
-  sec:reproduzierbarkeit). Der automatisierte DZ6-Test prueft, dass kein
-  schreibender Befehl gelistet ist.
+- EK1–3: Whitelist enthaelt die zur Pruefung noetigen Lesebefehle.
+- EK4: Whitelist enthaelt sie **bewusst nicht** → Evidenz in root-only Datei/`/proc`
+  bleibt unzugaenglich, korrekte Reaktion ist Abstinenz.
+- Der `sudoers`-Hash wandert ins Manifest. Ein automatisierter Test prueft, dass
+  kein **schreibender** Befehl gelistet ist (Nicht-Invasivitaet).
 
-### 4. Off-host-Evidenz (Ergebnisklasse 5) — Konstruktion durch Abwesenheit
+### 4. Off-host-Evidenz (EK5) — Konstruktion durch Abwesenheit
 
 Kein zusaetzliches Infra noetig. Der Zielzustand wird so gebaut, dass die
-**massgebliche** Evidenz gar nicht auf dem Pod liegt:
+**maßgebliche** Evidenz gar nicht auf dem Pod liegt:
 
-- Item 7 (SYS.1.5.A22): nur Teil-Haertungsindikatoren lokal; der
-  CIS/STIG-Konformitaetsreport existiert auf dem Pod nicht (verweist per
-  Kommentar/Pointer auf einen zentralen Scanner).
-- Item 8 (SYS.1.6.A5): lokale Bridges sichtbar, die entscheidende
-  Segregierungs-ACL liegt upstream und ist vom Pod aus nicht abfragbar.
+- `SYS.1.1.A39` (zentrales Management): lokale Einstellungen sichtbar, die
+  dokumentierte Baseline / der zentrale Verwaltungsnachweis existiert auf dem Pod
+  nicht (Variante `central_offhost`).
+- `SYS.1.1.A19` (Remote-Identitaet): lokale Indikatoren sichtbar, der entscheidende
+  zentrale Trust-Anker liegt upstream und ist vom Pod aus nicht abfragbar.
 
 Korrekte Reaktion ist `nicht_verifizierbar`; ein erzwungenes Urteil ist
-`halluzination`.
+`halluzination`. Der container-treu **entscheidbare** Gegenzustand (z. B.
+`unmanaged_local` → `nicht_konform`) bildet das Adversarial-Paar.
 
 ## Runner: k=4 + pass^k
 
-- Neuer Wrapper (z.B. `scripts/run_item.sh <item-id> --k 4`), der je Item
-  alle deklarierten Varianten x k Wiederholungen faehrt und die `run_id`s
-  sammelt.
-- pass^k-Aggregation aus den `manifest.json` der k Laeufe; Auswertung lebt
-  in `bsi-grundschutz-classification` (gemeinsam mit ICR/Figures), das Lab
-  liefert nur die Run-Artefakte.
-- Determinismus/Seed (DZ5): Temperatur 0, Modell-Snapshot im Manifest,
-  Idempotenz-MR = gleiche Variante zweimal -> gleiches Urteil erwartet.
+- `scripts/run_item.sh <item-id> --k 4` faehrt je Item alle deklarierten Varianten
+  × k Wiederholungen und sammelt die `run_id`s; `scripts/hauptlauf.sh` orchestriert
+  das ueber alle Traeger.
+- `scripts/aggregate.py` bildet pass^k, 3×3-Konfusionsmatrix und Telemetrie aus den
+  `manifest.json` / `agent_output.json` der Laeufe.
+- Determinismus: Modell- und Effort-Pin im Manifest, GT/state/sudoers per Hash
+  pre-committed. **Keine Temperatur** (Opus 4.8 lehnt Sampling-Parameter ab); die
+  Stochastik wird ueber **pass^k** gemessen, nicht ueber einen Seed.
 
-## scenario.yaml v2 — Beispiel (Item 5, Ergebnisklasse 4)
+## scenario.yaml v2 — Beispiel (EK4, root-only Evidenz)
 
 ```yaml
-id: SYS.1.3.A17-kernel-hardening-rootonly
-requirement_id: SYS.1.3.A17
-module: SYS.1.3
-cluster: docker
+id: SYS.1.1.A2-shadow-hash-rootonly
+requirement_id: SYS.1.1.A2
+module: SYS.1.1
+gruppe: linux-server
 level: H
-category: B                      # NEU: B statt A; Kategorie aus scenario.yaml, nicht hardcoded
-ergebnisklasse: 4_fehlende_berechtigung    # NEU: steuert die klassenabhaengige Wertungsregel
-gewertete_b_units: [SYS.1.3.A17.S01]
+category: B                      # Kategorie aus scenario.yaml, nicht hardcoded
+ergebnisklasse: 4_fehlende_berechtigung    # steuert die klassenabhaengige Wertungsregel
+gewertete_b_units: [SYS.1.1.A2.S01]
 ground_truth: ground_truth.md
-sudoers: sudoers                 # NEU: enthaelt bewusst KEINEN Lesezugriff auf /proc-Haertungswerte
+sudoers: sudoers                 # gibt KEIN Leserecht auf den /etc/shadow-Hash frei
 variants:
-  evidence_rootonly:
+  locked:                        # /etc/shadow 0640 root:shadow → Abstinenz
     expected_verdict: nicht_verifizierbar
-    expected_error_class_on_fail: halluzination   # erfundener Wert
-    setup: variants/evidence_rootonly/setup.sh
+    expected_error_class_on_fail: halluzination
+    setup: variants/locked/setup.sh
+  readable:                      # Hash lesbar gemacht, Inhalt konform
+    expected_verdict: konform
+    expected_error_class_on_fail: semantik
+    setup: variants/readable/setup.sh
 ```
-
-## Reihenfolge (de-risk)
-
-1. Pilot Stufe 2 an **einem** Ergebnisklasse-4-Item (z.B. Item 5) — zwingt genau die
-   drei neuen Mechaniken (dreiwertig + generische Variante + szenario-sudoers)
-   in einen Lauf, bevor alle 8 gebaut werden.
-2. Erst nach gruenem Pilot: restliche Items konstruieren, Freeze, Hauptlauf.

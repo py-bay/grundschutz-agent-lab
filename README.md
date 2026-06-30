@@ -1,47 +1,45 @@
 # grundschutz-agent-lab
 
 Reproduzierbarer Lab-Harness fuer die agentische Pruefung von
-BSI-IT-Grundschutz-Anforderungen (SYS-Module). Teil der Bachelorarbeit
-`bachelor_thesis`, aber als eigenstaendiges, reproduzierbares Artefakt
-separat gehalten (Forgejo-gehostet).
+BSI-IT-Grundschutz-Anforderungen (SYS-Module). Begleitartefakt einer
+Bachelorarbeit, als eigenstaendiges, reproduzierbares Repository gehalten.
 
 Je Lauf zieht der Harness ein **ephemeres Ubuntu-SSH-Zielsystem** als
 k3s-Pod hoch, etabliert einen definierten Referenzzustand, laesst einen
 Agenten (Claude Code) das System **read-only per SSH** pruefen, gleicht das
-**dreiwertige** Urteil gegen eine **pre-committed Ground Truth** ab und taggt
-die Telemetrie pro Lauf.
-
-> **Status (2026-06-19):** Schema **v2** (Coverage-Design). Maschinerie
-> validiert -- **Agent laeuft in-cluster als k8s-Job, laptop-frei**
-> (dreiwertiges Urteil, generische Varianten, szenario-/variant-eigener sudoers,
-> Preflight-SSH, Agent-Isolation via Dateisystem/Mount: 0 GT-Leakage). Sauber
-> validiert: `SYS.2.3.A1` Variante `readable` -> `konform`. **Befund:** A1
-> diskriminiert nicht ueber die Lesbarkeit (sichtbarer sudo+Logging-Kern via
-> `sudo -l`) und ist damit ein **Ergebnisklasse-1-Traeger, kein Ergebnisklasse-4-Traeger** (siehe
-> `FINDING.md` im jeweiligen `runs/`-Verzeichnis). Der A8-Durchstich
-> (`SYS.1.3.A8`, Kategorie A) laeuft ueber einen Legacy-Zweig weiter.
-> Architektur: [`docs/architektur.md`](docs/architektur.md).
+**dreiwertige** Urteil (`konform` / `nicht_konform` / `nicht_verifizierbar`)
+gegen eine **pre-committed Ground Truth** ab und taggt die Telemetrie pro Lauf.
 
 ## Konzept in einem Satz
 
 Das **Labor** ist das Forschungsartefakt, der **KI-Agent** der Pruefgegenstand.
-Das Lab deckt den **Ergebnisraum** einer Pruefung ab (5 Ergebnisklassen:
-konform / nicht konform / nicht verifizierbar, je korrekt -- plus sichtbare,
-klassifizierbare Fehlerpfade). Begruendung: Thesis Kap. 3,
-[`docs/design-principles.md`](docs/design-principles.md).
+Das Lab deckt den **Ergebnisraum** einer Pruefung ab — fuenf Ergebnisklassen
+(EK1 sauber konform, EK2 sauber nicht-konform, EK3 zu komplex / Mehrquellen-
+Synthese, EK4 fehlende Berechtigung, EK5 nicht entscheidbar / off-host), jede
+mit eigenem Soll-Urteil und sichtbaren, klassifizierbaren Fehlerpfaden.
 
-## Quickstart (v2, Agent in-cluster)
+## Ergebnis des summativen Laufs
 
-Voraussetzungen: `kubectl` mit gueltiger kubeconfig (Operator kann auf einem
-Node laufen, **kein Laptop noetig**), `envsubst`, `openssl`, `ssh-keygen`.
+Hauptlauf auf `claude-opus-4-8` (effort `high`), k=4 je Variante, 5 Traeger
+x 2 Varianten = **40 gewertete Laeufe**: **pass⁴ = 100 %** ueber alle zehn
+(Item x Variante)-Gruppen, fehlerfreie 3x3-Konfusionsmatrix inklusive korrekter
+Abstinenz in EK4/EK5, **0 GT-Leakage** ueber alle 40 Transkripte. Zahlen und
+Matrix in [`docs/hauptlauf-ergebnisse.md`](docs/hauptlauf-ergebnisse.md),
+maschinenlesbar in [`runs/_index/hauptlauf.json`](runs/_index/hauptlauf.json).
+
+## Quickstart (Agent in-cluster)
+
+Voraussetzungen: `kubectl` mit gueltiger kubeconfig (der Operator kann auf
+einem Node laufen, **kein Laptop noetig**), `envsubst`, `openssl`, `ssh-keygen`.
 Einmal im Namespace `grundschutz-lab` anzulegen: Secrets `claude-oauth`
-(OAuth-Token aus `claude setup-token`), `otel-auth` (OTel-Header,
-[`docs/telemetry.md`](docs/telemetry.md)), `forgejo-pull` (Registry-Pull).
-Agent-Image aus `images/claude-code/` bauen und in die Forgejo-Registry pushen.
+(OAuth-Token aus `claude setup-token`), `otel-auth` (OTel-Header, siehe
+[`docs/telemetry.md`](docs/telemetry.md)), `forgejo-pull` (Registry-Pull-Secret).
+Agent-Image aus `images/claude-code/` bauen und in eine vom Cluster erreichbare
+Registry pushen.
 
 ```bash
 # Variante hochziehen, Agenten als k8s-Job IN-CLUSTER fahren, Output sichern:
-scripts/run.sh SYS.2.3.A1-sudo-config-rootonly readable --agent-incluster
+scripts/run.sh SYS.1.1.A2-shadow-hash-rootonly readable --agent-incluster
 #   -> Pod + ConfigMap + Secret + Service + pre-committed Manifest, Preflight-SSH,
 #      dann claude als Job im Cluster (kein Repo-/GT-Mount). Druckt run.id.
 
@@ -53,12 +51,12 @@ scripts/teardown.sh <run_id> --verdict konform --notes "..."
 `--agent` statt `--agent-incluster` faehrt `claude` als **Dev-Fallback lokal**
 auf dem Operator (isoliertes `/tmp`-CWD), ohne Image/Secrets.
 
-Adversarial-Paar je Traeger: eine Variante pro Soll-Urteil (z.B. `locked`
--> `nicht_verifizierbar`, `readable` -> `konform`). Ein Item gilt als
-sauber, wenn alle Varianten ihr `expected_verdict` treffen.
+Adversarial-Paar je Traeger: eine Variante pro Soll-Urteil (z. B. `locked`
+-> `nicht_verifizierbar`, `readable` -> `konform`). Ein Item gilt als sauber,
+wenn **alle** Varianten ihr `expected_verdict` treffen.
 
-Vollstaendiger manueller Durchlauf (auch ohne Tunnel, auf dem Node):
-[`docs/runbook-durchspiel.md`](docs/runbook-durchspiel.md).
+Summativer k=4-Lauf ueber alle Traeger + Auswertung:
+[`docs/hauptlauf-runbook.md`](docs/hauptlauf-runbook.md).
 
 ## Layout
 
@@ -67,42 +65,48 @@ scenarios/<gruppe>/<id>/        fachliches Szenario je Anforderung
   scenario.yaml                 Anforderung, category, ergebnisklasse, gewertete B-Saetze
   ground_truth.md               pre-committed Referenz (gehasht je Lauf)
   check-prompt.md               Agent-Prompt (dreiwertig, ohne GT-Leak)
-  sudoers                       read-only Kommando-Whitelist dieses Szenarios (DZ6)
+  sudoers                       read-only Kommando-Whitelist dieses Szenarios
   variants/<v>/
     variant.env                 EXPECTED_VERDICT (+ erwartete Fehlerklasse)
     setup.sh                    etabliert den Zielzustand im Pod
 kubernetes/                     namespace + getemplatetes On-demand-Pod-Manifest
-images/ubuntu-sshd/             gepinntes Image fuer die echte Evaluation
+images/                         gepinnte Images (Dockerfiles + PINNING.md)
 scripts/run.sh                  Pod hoch + Stage + Manifest + Preflight + Agent
+scripts/run_item.sh             ein Item x alle Varianten x k Wiederholungen
+scripts/hauptlauf.sh            kompletter summativer Lauf ueber alle Traeger
 scripts/teardown.sh             Pod ab + dreiwertiges Urteil ins Manifest
+scripts/aggregate.py            pass^k + Konfusionsmatrix + Telemetrie ueber ein Lauf-Set
 runs/<run_id>/                  Lauf-Nachweis: manifest.json, agent_output.json,
-                                transcript.jsonl, stage/, ggf. FINDING.md
-docs/                           architektur, design-principles, scenario-schema-v2,
-                                runbook, telemetry
+                                transcript.jsonl, ggf. FINDING.md
+runs/_index/hauptlauf.json      maschinenlesbares Ergebnis des gewerteten 40er-Sets
+docs/                           Schema, Test-Case-Katalog, Runbook, Fehlerklassen,
+                                Hauptlauf-Ergebnisse, Telemetrie
 ```
 
-Legacy-Szenarien mit nur `variants/<v>/sshd_config` (A8-Durchstich) laufen
-ueber einen Abwaertskompatibilitaets-Zweig in `run.sh` weiter.
+Legacy-Szenarien mit nur `variants/<v>/sshd_config` (A8-Durchstich, binaeres
+Urteil) laufen ueber einen Abwaertskompatibilitaets-Zweig in `run.sh` weiter.
 
-## Schema v1 -> v2
+## Schema & Faelle
 
-Generalisierung vom A-Durchstich aufs Coverage-Design: dreiwertiges Urteil,
-Variante = inszenierter Zielzustand via `setup.sh`, read-only Whitelist pro
-Szenario. Details: [`docs/scenario-schema-v2.md`](docs/scenario-schema-v2.md).
+Eine Variante ist ein **inszenierter Zielzustand** (via `setup.sh`), nicht eine
+Config-Datei; das Urteil ist dreiwertig; die read-only Whitelist gilt **pro
+Szenario** (Voraussetzung fuer EK4: die entscheidende Evidenz wird bewusst nicht
+freigegeben). Schema-Details: [`docs/scenario-schema-v2.md`](docs/scenario-schema-v2.md).
+Die Faelle des gewerteten Sets — Soll-Urteil je Variante, erwartete Fehlerklasse,
+maßgebliche Evidenz: [`docs/test-case-katalog.md`](docs/test-case-katalog.md).
 
 ## Design in einem Satz
 
 On-demand & imperativ (nicht ArgoCD, weil Reconcile gegen ephemere Pods
 arbeitet); Ground-Truth-Pre-Commitment per Hash gegen das Test-Oracle-Problem;
-Agent isoliert ohne GT-Zugriff; Telemetrie pro Lauf ueber `run.id` mit
-OpenObserve verknuepft.
+Agent isoliert ohne GT-Zugriff (0 GT-Leakage); Telemetrie pro Lauf ueber
+`run.id` mit OpenObserve verknuepft.
 
-## Bezug zu den Repos
+## Bezug zu den Schwester-Repos
 
 | Repo | Rolle |
 |------|-------|
-| `grundschutz-agent-lab` (dieses) | Lab: Szenarien, On-demand-Trigger, Run-Manifeste, Architektur |
-| `bsi-grundschutz-classification` | Klassifikation/Auswertung + **Carrier-Selektion** (`data/lab_sample/`) |
-| `bsi-grundschutz-parser` | Extraktion der Anforderungen (Anhang A) |
-| `bachelor_thesis` | Text + massgebliche Methodik (Kap. 3) |
-| `homelab` / `homelab-gitops` | k3s-Substrat / ArgoCD-Workloads (u.a. OpenObserve) |
+| `grundschutz-agent-lab` (dieses) | Lab: Szenarien, On-demand-Trigger, Run-Manifeste, Ergebnisse |
+| `bsi-grundschutz-classification` | Klassifikation/Auswertung + Carrier-Selektion |
+| `bsi-grundschutz-parser` | Extraktion der Anforderungen aus den BSI-Bausteinen |
+| `homelab` | k3s-Substrat (Ansible/Manifeste), auf dem das Lab laeuft |
