@@ -160,7 +160,7 @@ info "Run-ID: $RUN_ID"
 info "Kategorie/Ergebnisklasse: $CATEGORY / $ERGEBNISKLASSE | erwartetes Urteil: $EXPECTED_VERDICT"
 
 if [[ "$TARGET" == k8s ]]; then
-  info "Namespace/Pod: $NAMESPACE/$POD_NAME (node role=lab)"
+  info "Namespace/Pod: $NAMESPACE/$POD_NAME (node ${LAB_NODE_SELECTOR:-unpinned})"
   # --- Cluster-Objekte erzeugen ---
   $KUBECTL apply -f "$REPO_ROOT/kubernetes/namespace.yaml" >/dev/null
   $KUBECTL -n "$NAMESPACE" create configmap "$CM_NAME" --from-file="$STAGE" \
@@ -173,9 +173,13 @@ if [[ "$TARGET" == k8s ]]; then
   $KUBECTL -n "$NAMESPACE" label --overwrite secret "$SECRET_NAME" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
 
   export POD_NAME NAMESPACE IMAGE RUN_ID RUN_ID_LABEL SCENARIO REQ_ID REQ_ID_LABEL \
-         VARIANT VARIANT_LABEL ERGEBNISKLASSE_LABEL GT_HASH STATE_HASH CM_NAME SECRET_NAME
-  envsubst '${POD_NAME} ${NAMESPACE} ${IMAGE} ${RUN_ID} ${RUN_ID_LABEL} ${SCENARIO} ${REQ_ID} ${REQ_ID_LABEL} ${VARIANT} ${VARIANT_LABEL} ${ERGEBNISKLASSE_LABEL} ${GT_HASH} ${STATE_HASH} ${CM_NAME} ${SECRET_NAME}' \
+         VARIANT VARIANT_LABEL ERGEBNISKLASSE_LABEL GT_HASH STATE_HASH CM_NAME SECRET_NAME \
+         LAB_NODE_KEY LAB_NODE_VALUE LAB_TOL_KEY LAB_TOL_VALUE
+  envsubst '${POD_NAME} ${NAMESPACE} ${IMAGE} ${RUN_ID} ${RUN_ID_LABEL} ${SCENARIO} ${REQ_ID} ${REQ_ID_LABEL} ${VARIANT} ${VARIANT_LABEL} ${ERGEBNISKLASSE_LABEL} ${GT_HASH} ${STATE_HASH} ${CM_NAME} ${SECRET_NAME} ${LAB_NODE_KEY} ${LAB_NODE_VALUE} ${LAB_TOL_KEY} ${LAB_TOL_VALUE}' \
     < "$REPO_ROOT/kubernetes/target-pod.tmpl.yaml" > "$RUN_DIR/pod.yaml"
+  # Substrat-Bloecke abschalten, wenn per "" deaktiviert (siehe lib.sh).
+  [[ -n "$LAB_NODE_SELECTOR" ]] || strip_block node-selector "$RUN_DIR/pod.yaml"
+  [[ -n "$LAB_TOLERATION"    ]] || strip_block toleration    "$RUN_DIR/pod.yaml"
   $KUBECTL apply -f "$RUN_DIR/pod.yaml" >/dev/null
 
   info "warte auf Pod Ready (apt install openssh-server + setup.sh laufen im Pod) ..."
@@ -218,7 +222,7 @@ cat > "$RUN_DIR/manifest.json" <<JSON
   "configmap_name": "$CM_NAME",
   "secret_name": "$SECRET_NAME",
   "run_id_label": "$RUN_ID_LABEL",
-  "node_selector": "role=lab",
+  "node_selector": "$LAB_NODE_SELECTOR",
   "ssh": { "host": "127.0.0.1", "port": $PORT, "user": "audit", "private_key": "runs/$RUN_ID/ssh/id_ed25519" },
   "otel_resource_attributes": "$OTEL_ATTRS",
   "created_utc": "$TS",
@@ -259,8 +263,11 @@ if [[ "$AGENT_INCLUSTER" == true ]]; then
   fi
   $KUBECTL -n "$NAMESPACE" get secret claude-oauth >/dev/null 2>&1 \
     || die "Secret 'claude-oauth' fehlt im Namespace $NAMESPACE - einmalig anlegen (siehe README/runbook)."
-  $KUBECTL -n "$NAMESPACE" get secret otel-auth >/dev/null 2>&1 \
-    || die "Secret 'otel-auth' fehlt im Namespace $NAMESPACE - einmalig anlegen (siehe README/runbook)."
+  # otel-auth nur noetig, wenn Telemetrie-Export aktiv ist (OTEL_ENDPOINT nicht leer).
+  if [[ -n "$OTEL_ENDPOINT" ]]; then
+    $KUBECTL -n "$NAMESPACE" get secret otel-auth >/dev/null 2>&1 \
+      || die "Secret 'otel-auth' fehlt im Namespace $NAMESPACE - einmalig anlegen (siehe README/runbook) oder Telemetrie mit OTEL_ENDPOINT=\"\" abschalten."
+  fi
 
   TARGET_SVC="target-svc-$(sanitize "${VARIANT}-${RAND}")"
   JOB_NAME="agent-$(sanitize "${VARIANT}-${RAND}")"
@@ -296,9 +303,15 @@ if [[ "$AGENT_INCLUSTER" == true ]]; then
   $KUBECTL -n "$NAMESPACE" label --overwrite service "$TARGET_SVC" "thesis.pybay.de/run-id=$RUN_ID_LABEL" >/dev/null
 
   # Agent-Job rendern + starten.
-  export JOB_NAME AGENT_IMAGE AGENT_MODEL AGENT_EFFORT AGENT_KEY_SECRET AGENT_PROMPT_CM OTEL_ATTRS REQ_ID_LABEL ERGEBNISKLASSE_LABEL
-  envsubst '${JOB_NAME} ${NAMESPACE} ${RUN_ID_LABEL} ${REQ_ID_LABEL} ${ERGEBNISKLASSE_LABEL} ${AGENT_IMAGE} ${AGENT_MODEL} ${AGENT_EFFORT} ${AGENT_KEY_SECRET} ${AGENT_PROMPT_CM} ${OTEL_ATTRS}' \
+  export JOB_NAME AGENT_IMAGE AGENT_MODEL AGENT_EFFORT AGENT_KEY_SECRET AGENT_PROMPT_CM OTEL_ATTRS REQ_ID_LABEL ERGEBNISKLASSE_LABEL \
+         AGENT_PULL_SECRET OTEL_ENDPOINT LAB_NODE_KEY LAB_NODE_VALUE LAB_TOL_KEY LAB_TOL_VALUE
+  envsubst '${JOB_NAME} ${NAMESPACE} ${RUN_ID_LABEL} ${REQ_ID_LABEL} ${ERGEBNISKLASSE_LABEL} ${AGENT_IMAGE} ${AGENT_MODEL} ${AGENT_EFFORT} ${AGENT_KEY_SECRET} ${AGENT_PROMPT_CM} ${OTEL_ATTRS} ${AGENT_PULL_SECRET} ${OTEL_ENDPOINT} ${LAB_NODE_KEY} ${LAB_NODE_VALUE} ${LAB_TOL_KEY} ${LAB_TOL_VALUE}' \
     < "$REPO_ROOT/kubernetes/agent-job.tmpl.yaml" > "$RUN_DIR/agent-job.yaml"
+  # Substrat-Bloecke abschalten, wenn per "" deaktiviert (siehe lib.sh).
+  [[ -n "$AGENT_PULL_SECRET"  ]] || strip_block pull-secret   "$RUN_DIR/agent-job.yaml"
+  [[ -n "$OTEL_ENDPOINT"      ]] || strip_block otel          "$RUN_DIR/agent-job.yaml"
+  [[ -n "$LAB_NODE_SELECTOR"  ]] || strip_block node-selector "$RUN_DIR/agent-job.yaml"
+  [[ -n "$LAB_TOLERATION"     ]] || strip_block toleration    "$RUN_DIR/agent-job.yaml"
   # Modell-Pin optional: ohne AGENT_MODEL die ANTHROPIC_MODEL- UND
   # ANTHROPIC_DEFAULT_HAIKU_MODEL-Env-Zeilen entfernen (sonst liefe der Agent mit
   # leerem Modellnamen). Mit AGENT_MODEL bleiben beide Pins. AGENT_EFFORT hat in

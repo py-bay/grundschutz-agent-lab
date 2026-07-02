@@ -12,7 +12,7 @@ ergebnisklasse: 5_nicht_entscheidbar
 # kein lokaler Trust-Store -> nicht_konform) statt auf die off-host-Governance zu
 # abstinieren (2 Konstruktionen getestet, gegenlaeufige Fehlrichtung). Damit kein
 # sauberer EK5-Traeger; EK5 traegt A39. Belassen als dokumentierter Befund
-# (analog A1 bei EK4). Details: docs/befunde.md / docs/pilot-runde2.md.
+# (analog A1 bei EK4). Details: docs/test-case-katalog.md (Befund-Traeger).
 
 # Gewerteter B/hoch-Satz (pass^k wird nur hierauf bezogen):
 #   SYS.1.1.A19.S02 - "Die Identitaet von Remote-Systemen und die Integritaet der

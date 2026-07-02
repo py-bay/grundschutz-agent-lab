@@ -1,9 +1,14 @@
 # Telemetrie: Claude Code -> OpenObserve, pro Lauf getaggt
 
-Ziel: jeder Agentenlauf schreibt OTel-Metriken/-Events in das
-OpenObserve im Cluster (`<openobserve-host>`), getaggt mit `run.id`, sodass
+Ziel: jeder Agentenlauf schreibt OTel-Metriken/-Events in eine OTLP-Senke
+(hier: OpenObserve, `<openobserve-host>`), getaggt mit `run.id`, sodass
 sich Token, Kosten, Tool-Entscheidungen etc. **pro Lauf** und **ueber
 mehrere Laeufe** auswerten lassen.
+
+Der Export ist **optional**: jede OTLP-faehige Senke genuegt (Endpunkt per
+`OTEL_ENDPOINT` uebersteuerbar, `""` schaltet ihn ab — s.
+[`hauptlauf-runbook.md`](hauptlauf-runbook.md#reproduktion-auf-einem-fremden-cluster)).
+Der qualitative Lauf-Nachweis unter `runs/<id>/` entsteht unabhaengig davon.
 
 ## 1. Einmalige Konfiguration (`~/.claude/settings.json`)
 

@@ -4,10 +4,10 @@
 # (ConfigMap, ohne Ground Truth) + privaten SSH-Key (Secret) -- KEIN Repo-,
 # GT- oder Host-Mount. DZ2 traegt damit ueber Dateisystem-/Mount-Isolation:
 # die Ground Truth liegt nur operator-seitig im Dateisystem, in keinem Pod.
-# Siehe docs/architektur.md und docs/design-principles.md (DP2).
+# Siehe README (Design) und docs/hauptlauf-runbook.md.
 #
-#   docker build -t git.k3s.pybay.de/gitsim/claude-code:latest images/claude-code
-#   docker push  git.k3s.pybay.de/gitsim/claude-code:latest
+#   docker build -t <registry>/claude-code:latest images/claude-code
+#   docker push  <registry>/claude-code:latest
 #
 # Pinning (s. ../PINNING.md): Node-Base per Digest ueber
 #   --build-arg NODE_REF=node@sha256:...  und claude-code-Version ueber

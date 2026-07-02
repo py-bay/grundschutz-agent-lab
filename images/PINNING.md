@@ -35,15 +35,15 @@ Die gewählte Version (z. B. `1.2.3`) als `CLAUDE_CODE_VERSION` pinnen.
 # Zielsystem
 docker build \
   --build-arg UBUNTU_REF=ubuntu@sha256:<DIGEST> \
-  -t git.k3s.pybay.de/gitsim/ubuntu-sshd:24.04 images/ubuntu-sshd
-docker push git.k3s.pybay.de/gitsim/ubuntu-sshd:24.04
+  -t <registry>/ubuntu-sshd:24.04 images/ubuntu-sshd
+docker push <registry>/ubuntu-sshd:24.04
 
 # Agent
 docker build \
   --build-arg NODE_REF=node@sha256:<DIGEST> \
   --build-arg CLAUDE_CODE_VERSION=<VERSION> \
-  -t git.k3s.pybay.de/gitsim/claude-code:<VERSION> images/claude-code
-docker push git.k3s.pybay.de/gitsim/claude-code:<VERSION>
+  -t <registry>/claude-code:<VERSION> images/claude-code
+docker push <registry>/claude-code:<VERSION>
 ```
 
 Nach dem Push den **Push-Digest** des eigenen Images notieren (`docker
@@ -56,8 +56,8 @@ referenzieren.
 Umgebung. Für den Hauptlauf:
 
 ```bash
-export IMAGE='git.k3s.pybay.de/gitsim/ubuntu-sshd@sha256:<PUSH_DIGEST>'
-export AGENT_IMAGE='git.k3s.pybay.de/gitsim/claude-code@sha256:<PUSH_DIGEST>'
+export IMAGE='<registry>/ubuntu-sshd@sha256:<PUSH_DIGEST>'
+export AGENT_IMAGE='<registry>/claude-code@sha256:<PUSH_DIGEST>'
 scripts/run_item.sh <scenario-id> --k 4 --mode agent-incluster
 ```
 
@@ -100,7 +100,12 @@ kanonische ID. Reproduzierbarkeit ruht auf (a) Alias repointet nicht im Lab-Fens
 > Zusatzpakete sind ein minimaler, dokumentierter Rest-Drift — nicht bit-genau.
 > (Für echtes Pinning müssten diese Pakete ins `images/ubuntu-sshd`-Dockerfile.)
 
-## Gepinnte Werte (Protokoll — vor dem Hauptlauf ausfüllen)
+## Gepinnte Werte (Protokoll des gewerteten Hauptlaufs)
+
+> Die Push-Digests referenzieren die Registry des gewerteten Laufs und sind
+> nicht oeffentlich ziehbar. Fuer eine Reproduktion beide Images aus diesem
+> Verzeichnis gegen die protokollierten Basis-Digests selbst bauen
+> (s. [`docs/hauptlauf-runbook.md`](../docs/hauptlauf-runbook.md#reproduktion-auf-einem-fremden-cluster)).
 
 | Artefakt | Pin | Aufgelöst am |
 |----------|-----|--------------|

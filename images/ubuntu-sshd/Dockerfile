@@ -3,11 +3,11 @@
 # Der Smoke-Test (scripts/run.sh) nutzt aktuell ubuntu:24.04 + apt-install
 # zur Laufzeit, damit kein Registry-/Pull-Secret-Setup noetig ist. Fuer die
 # wissenschaftliche Evaluation ist dieses gepinnte Image vorzuziehen
-# (kein apt-Drift, fixe Versionen). Bauen + in die Forgejo-OCI-Registry
-# pushen, dann in target-pod.tmpl.yaml IMAGE darauf zeigen lassen.
+# (kein apt-Drift, fixe Versionen). Bauen + in eine vom Cluster erreichbare
+# Registry pushen, dann den Lauf per IMAGE-Env darauf zeigen lassen.
 #
-#   docker build -t git.k3s.pybay.de/gitsim/ubuntu-sshd:24.04 images/ubuntu-sshd
-#   docker push  git.k3s.pybay.de/gitsim/ubuntu-sshd:24.04
+#   docker build -t <registry>/ubuntu-sshd:24.04 images/ubuntu-sshd
+#   docker push  <registry>/ubuntu-sshd:24.04
 #
 # Pinning (s. ../PINNING.md): Base per Digest ueber
 #   --build-arg UBUNTU_REF=ubuntu@sha256:...   (bit-genaue Reproduzierbarkeit, DZ5)

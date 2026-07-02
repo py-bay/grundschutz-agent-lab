@@ -10,7 +10,7 @@
 # Bootstrap inline (apt install openssh-server) statt vorgebautem Image:
 # laesst den Lauf ohne Registry/imagePullSecret starten. Fuer die
 # eigentliche Evaluation auf das gepinnte Image aus images/ubuntu-sshd/
-# umstellen (Reproduzierbarkeit, kein apt-Drift) - siehe docs/methodology.md.
+# umstellen (Reproduzierbarkeit, kein apt-Drift) - siehe images/PINNING.md.
 apiVersion: v1
 kind: Pod
 metadata:
@@ -29,13 +29,19 @@ metadata:
     thesis.pybay.de/state-sha256: "${STATE_HASH}"
 spec:
   restartPolicy: Never
+  # Node-Pinning auf den Lab-Node (Substrat-Vertrag). Entfaellt je Block,
+  # wenn LAB_NODE_SELECTOR="" bzw. LAB_TOLERATION="" (siehe scripts/lib.sh).
+  # BEGIN node-selector
   nodeSelector:
-    role: lab
+    ${LAB_NODE_KEY}: "${LAB_NODE_VALUE}"
+  # END node-selector
+  # BEGIN toleration
   tolerations:
-    - key: lab
+    - key: ${LAB_TOL_KEY}
       operator: Equal
-      value: "true"
+      value: "${LAB_TOL_VALUE}"
       effect: NoSchedule
+  # END toleration
   containers:
     - name: target
       image: ${IMAGE}

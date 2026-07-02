@@ -28,28 +28,40 @@ spec:
     spec:
       restartPolicy: Never
       automountServiceAccountToken: false
-      # privates Forgejo-Registry-Paket -> Pull-Credentials (einmalig im NS angelegt).
+      # Pull-Credentials der Registry (einmalig im NS angelegt). Entfaellt,
+      # wenn AGENT_PULL_SECRET="" (oeffentlich ziehbares AGENT_IMAGE).
+      # BEGIN pull-secret
       imagePullSecrets:
-        - name: forgejo-pull
+        - name: ${AGENT_PULL_SECRET}
+      # END pull-secret
+      # Node-Pinning auf den Lab-Node (Substrat-Vertrag). Entfaellt je Block,
+      # wenn LAB_NODE_SELECTOR="" bzw. LAB_TOLERATION="" (siehe scripts/lib.sh).
+      # BEGIN node-selector
       nodeSelector:
-        role: lab
+        ${LAB_NODE_KEY}: "${LAB_NODE_VALUE}"
+      # END node-selector
+      # BEGIN toleration
       tolerations:
-        - key: lab
+        - key: ${LAB_TOL_KEY}
           operator: Equal
-          value: "true"
+          value: "${LAB_TOL_VALUE}"
           effect: NoSchedule
+      # END toleration
       containers:
         - name: agent
           image: ${AGENT_IMAGE}
-          # IfNotPresent: das Image wird in die containerd der Lab-Node
-          # importiert (kubernetes/load-image.sh). Bei :latest waere der
-          # Default 'Always' und wuerde trotz lokalem Image die Registry
-          # anfragen -- die ist fuer grosse Blobs unzuverlaessig.
+          # IfNotPresent: erlaubt, das Image vorab in die containerd der
+          # Lab-Node zu importieren. Bei :latest waere der Default 'Always'
+          # und wuerde trotz lokalem Image die Registry anfragen -- die ist
+          # fuer grosse Blobs unzuverlaessig.
           imagePullPolicy: IfNotPresent
           env:
             - name: CLAUDE_CODE_OAUTH_TOKEN
               valueFrom:
                 secretKeyRef: { name: claude-oauth, key: token }
+            # Lauf-Telemetrie (DZ7) an eine OTLP-Senke. Der ganze Block
+            # entfaellt, wenn OTEL_ENDPOINT="" (dann auch kein otel-auth-Secret).
+            # BEGIN otel
             - name: CLAUDE_CODE_ENABLE_TELEMETRY
               value: "1"
             - name: OTEL_METRICS_EXPORTER
@@ -61,7 +73,7 @@ spec:
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
               value: "http/protobuf"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "https://o2.k3s.pybay.de/api/default"
+              value: "${OTEL_ENDPOINT}"
             - name: OTEL_EXPORTER_OTLP_HEADERS
               valueFrom:
                 secretKeyRef: { name: otel-auth, key: authorization }
@@ -75,6 +87,7 @@ spec:
               value: "1"
             - name: OTEL_LOG_TOOL_CONTENT
               value: "1"
+            # END otel
             # Modell-Pin (DZ5/DZ9). Wird von run.sh entfernt, wenn AGENT_MODEL leer ist.
             - name: ANTHROPIC_MODEL
               value: "${AGENT_MODEL}"

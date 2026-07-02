@@ -31,11 +31,22 @@ maschinenlesbar in [`runs/_index/hauptlauf.json`](runs/_index/hauptlauf.json).
 
 Voraussetzungen: `kubectl` mit gueltiger kubeconfig (der Operator kann auf
 einem Node laufen, **kein Laptop noetig**), `envsubst`, `openssl`, `ssh-keygen`.
-Einmal im Namespace `grundschutz-lab` anzulegen: Secrets `claude-oauth`
-(OAuth-Token aus `claude setup-token`), `otel-auth` (OTel-Header, siehe
-[`docs/telemetry.md`](docs/telemetry.md)), `forgejo-pull` (Registry-Pull-Secret).
+Einmal im Namespace `grundschutz-lab` anzulegen: Secret `claude-oauth`
+(OAuth-Token aus `claude setup-token`); bei aktivem Telemetrie-Export zusaetzlich
+`otel-auth` (OTel-Header, siehe [`docs/telemetry.md`](docs/telemetry.md)) und bei
+privater Registry ein Pull-Secret (Default-Name `forgejo-pull`).
 Agent-Image aus `images/claude-code/` bauen und in eine vom Cluster erreichbare
 Registry pushen.
+
+**Reproduktion auf einem fremden Cluster:** Das Lab laeuft auf jedem
+Kubernetes-Cluster. Node-Pinning, Telemetrie-Senke und Pull-Secret sind per
+Env uebersteuerbar (Substrat-Vertrag in `scripts/lib.sh`); die Schritte stehen
+in [`docs/hauptlauf-runbook.md`](docs/hauptlauf-runbook.md#reproduktion-auf-einem-fremden-cluster).
+Der niedrigschwelligste Einstieg braucht **gar keinen Cluster**: `--target docker`
+faehrt das Zielsystem als lokalen Docker-Container, `--agent` den Agenten lokal
+(`claude`-CLI genuegt), `--backend opencode` einen vollstaendig lokalen offenen
+Stack (opencode + Ollama, siehe
+[`docs/agent-backend-opencode-lokal.md`](docs/agent-backend-opencode-lokal.md)).
 
 ```bash
 # Variante hochziehen, Agenten als k8s-Job IN-CLUSTER fahren, Output sichern:
@@ -107,6 +118,19 @@ Agent isoliert ohne GT-Zugriff (0 GT-Leakage); Telemetrie pro Lauf ueber
 | Repo | Rolle |
 |------|-------|
 | `grundschutz-agent-lab` (dieses) | Lab: Szenarien, On-demand-Trigger, Run-Manifeste, Ergebnisse |
-| `bsi-grundschutz-classification` | Klassifikation/Auswertung + Carrier-Selektion |
-| `bsi-grundschutz-parser` | Extraktion der Anforderungen aus den BSI-Bausteinen |
-| `homelab` | k3s-Substrat (Ansible/Manifeste), auf dem das Lab laeuft |
+| [`bsi-grundschutz-classification`](https://github.com/py-bay/bsi-grundschutz-classification) | Klassifikation/Auswertung + Carrier-Selektion |
+| [`bsi-grundschutz-parser`](https://github.com/py-bay/bsi-grundschutz-parser) | Extraktion der Anforderungen aus den BSI-Bausteinen |
+
+Das Cluster-Substrat des gewerteten Laufs (2-Knoten-k3s) ist nicht Teil der
+Veroeffentlichung und nicht erforderlich: Das Lab setzt nur den dokumentierten
+Substrat-Vertrag voraus (beliebiger k8s-Cluster, s. Quickstart/Runbook).
+
+## Lizenz und BSI-Quellenhinweis
+
+Der Inhalt dieses Repositories steht unter der [MIT-Lizenz](LICENSE).
+
+Die Szenarien zitieren einzelne Anforderungssaetze aus dem
+**IT-Grundschutz-Kompendium des BSI (Edition 2023)** mit Anforderungs-ID als
+Kurzzitate (Quelle: [BSI, IT-Grundschutz-Kompendium](https://www.bsi.bund.de/DE/Themen/Unternehmen-und-Organisationen/Standards-und-Zertifizierung/IT-Grundschutz/it-grundschutz_node.html),
+(c) Bundesamt fuer Sicherheit in der Informationstechnik). Die Baustein-PDFs
+selbst werden nicht weiterverteilt.

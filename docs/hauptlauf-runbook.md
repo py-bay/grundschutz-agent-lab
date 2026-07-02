@@ -41,8 +41,53 @@ der Diskussion gefuehrt (→ [`test-case-katalog.md`](test-case-katalog.md)).
    `:latest`) — funktioniert, ist aber nicht bit-genau reproduzierbar.
 3. **GT-Freeze.** Szenarien committet (GT-/state-/sudoers-/prompt-Hashes stehen pro
    Lauf pre-committed im Manifest). `git status` clean.
-4. **Cluster + Secrets.** `kubectl get nodes` (beide Ready); Secrets `claude-oauth`,
-   `otel-auth`, `forgejo-pull` im Namespace `grundschutz-lab`.
+4. **Cluster + Secrets.** `kubectl get nodes` (Ready); Secret `claude-oauth` im
+   Namespace `grundschutz-lab`; bei aktivem Telemetrie-Export `otel-auth`, bei
+   privater Registry das Pull-Secret (Default `forgejo-pull`). Auf einem fremden
+   Cluster zuerst den Substrat-Vertrag anpassen (naechster Abschnitt).
+
+## Reproduktion auf einem fremden Cluster
+
+Das Lab setzt kein bestimmtes Substrat voraus, sondern einen dokumentierten
+**Substrat-Vertrag** (Defaults in `scripts/lib.sh` = Substrat des gewerteten
+Hauptlaufs). Vier Groessen sind per Env uebersteuerbar, `""` schaltet den
+jeweiligen Block im gerenderten Manifest ab:
+
+| Env | Default (Hauptlauf) | Fremder Cluster |
+|-----|---------------------|-----------------|
+| `LAB_NODE_SELECTOR` | `role=lab` | eigenes Node-Label, oder `""` = kein Node-Pinning |
+| `LAB_TOLERATION` | `lab=true` (NoSchedule) | eigener Taint, oder `""` = keine Toleration |
+| `OTEL_ENDPOINT` | OTLP-Ingest des Hauptlauf-Substrats | eigene OTLP-Senke (z. B. OpenObserve, `.../api/<org>`), oder `""` = Telemetrie aus |
+| `AGENT_PULL_SECRET` | `forgejo-pull` | Name des eigenen Pull-Secrets, oder `""` = oeffentliche Registry |
+
+Schritte:
+
+1. **Images selbst bauen** (die gepinnten Digests in
+   [`../images/PINNING.md`](../images/PINNING.md) zeigen auf die Registry des
+   gewerteten Laufs und sind nicht oeffentlich ziehbar): beide Dockerfiles unter
+   `images/` gegen die dort protokollierten Basis-Digests und die gepinnte
+   claude-code-Version bauen, in die eigene Registry pushen, per
+   `IMAGE`/`AGENT_IMAGE` referenzieren. Die Basen (`ubuntu:24.04`,
+   `node:22-bookworm-slim`, npm-Paket `@anthropic-ai/claude-code`) sind
+   oeffentlich.
+2. **Secrets anlegen:** `claude-oauth` (key `token`, aus `claude setup-token`);
+   nur bei Telemetrie `otel-auth` (key `authorization`, s.
+   [`telemetry.md`](telemetry.md)); nur bei privater Registry das Pull-Secret.
+3. **Substrat-Vertrag exportieren** (Beispiel ohne dedizierten Lab-Node, ohne
+   Telemetrie, mit oeffentlich ziehbarer Registry):
+   ```bash
+   export LAB_NODE_SELECTOR="" LAB_TOLERATION="" OTEL_ENDPOINT="" AGENT_PULL_SECRET=""
+   export IMAGE='<registry>/ubuntu-sshd@sha256:...' AGENT_IMAGE='<registry>/claude-code@sha256:...'
+   scripts/run.sh SYS.1.1.A2-shadow-hash-rootonly readable --agent-incluster
+   ```
+4. **Ohne Cluster reproduzieren:** `--target docker` (lokales Docker-Zielsystem)
+   plus `--agent` (lokale `claude`-CLI) oder `--backend opencode`
+   (vollstaendig lokaler Stack, s.
+   [`agent-backend-opencode-lokal.md`](agent-backend-opencode-lokal.md)).
+
+Der qualitative Lauf-Nachweis (`runs/<id>/manifest.json`, `agent_output.json`,
+`transcript.jsonl`) entsteht in allen Konstellationen identisch; die
+OTLP-Telemetrie ist eine zusaetzliche quantitative Aggregationsschicht.
 
 ## Lauf
 
